@@ -6,11 +6,16 @@ const xssClean = require('xss-clean');
 const cookieParser = require('cookie-parser');
 const { connectDB } = require('./config/db');
 const { responseBody } = require('./config/responseBody');
+const { initSocket } = require('./socket/socket');
+const http = require('http')
+
 require('dotenv').config();
 
 const PORT = process.env.PORT || 8080;
 const app = express();
+const server = http.createServer(app);
 
+initSocket(server);
 connectDB();
 
 app.use(helmet());
@@ -47,6 +52,10 @@ app.use('/api/doctors', doctorRoutes);
 const patientRoutes = require('./routes/patientRoutes');
 app.use('/api/patient', patientRoutes);
 
+const videoRoutes = require('./routes/videoRoutes');
+app.use('/api/video', videoRoutes);
+
+
 app.get('/', (req, res) => {
   res.send('HelloDoc Backend API');
 });
@@ -77,13 +86,8 @@ app.use((err, req, res, next) => {
     );
   }
 
-
-  // if (err.message?.includes('Only JPG, PNG, or PDF')) {
-  //   return res.status(400).json(responseBody(400, err.message, null));
-  // }
-
   return res.status(500).json(
-    responseBody(500, 'Unexpected server error', null)
+    responseBody(500, `Unexpected server error: ${err.message}`, null)
   );
 });
 

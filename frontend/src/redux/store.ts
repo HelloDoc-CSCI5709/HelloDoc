@@ -3,13 +3,15 @@ import authReducer from './reducers/authReducers';
 import userReducer from './reducers/userReducers';
 import appointmentReducer from './reducers/appointmentReducer';
 import patientReducer from './reducers/patientReducer';
+import videoReducer from './reducers/videoReducers'
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     user: userReducer,
     appointment: appointmentReducer,
-    patient: patientReducer
+    patient: patientReducer,
+    video:       videoReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
