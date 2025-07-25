@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAppDispatch } from '../redux/hooks';
-import { registerSuccess } from '../redux/reducers/userReducers'; 
+import { toast } from 'react-toastify';
 
 function PatientRegister() {
   const [form, setForm] = useState({
@@ -24,7 +23,6 @@ function PatientRegister() {
   const [successMessage, setSuccessMessage] = useState(''); 
 
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
 
   const securityQuestions = [
     "What city were you born in?",
@@ -43,8 +41,7 @@ function PatientRegister() {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-    setSuccessMessage(''); 
-
+    setSuccessMessage('');
 
     if (form.password !== form.confirmPassword) {
       setError('Passwords do not match');
@@ -65,62 +62,60 @@ function PatientRegister() {
     }
 
     try {
-const response = await fetch('http://localhost:8080/api/auth/register', {
-  method: 'POST',
-  headers: { 
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({
-    fullName: form.fullName,
-    email: form.email,
-    password: form.password,
-    phone: form.phone,
-    dob: form.dob,
-    age: form.age,
-    gender: form.gender,
-    role: 'patient',
-    securityQuestion,
-    securityAnswer
-  }),
-  credentials: 'same-origin' 
-});
+      const response = await fetch('http://localhost:8080/api/auth/register', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fullName: form.fullName,
+          email: form.email,
+          password: form.password,
+          phone: form.phone,
+          dob: form.dob,
+          age: form.age,
+          gender: form.gender,
+          role: 'patient',
+          securityQuestion,
+          securityAnswer
+        }),
+      });
 
-const data = await response.json();
-if (!response.ok) {
-      throw new Error(data.message || 'Registration failed');
-    }
-const userData = data.body;
-    console.log('User data:', userData); 
+      const data = await response.json();
 
-if (!userData || !userData.ID) {
-  throw new Error('Invalid user data received from server');
-}
+      if (!response.ok) {
+        // Handle specific error codes
+        switch (response.status) {
+          case 400:
+            throw new Error(data.message || 'Invalid registration data');
+          case 409:
+            throw new Error(data.message || 'Email already exists. Please use a different email or login.');
+          case 500:
+            throw new Error('Server error. Please try again later.');
+          default:
+            throw new Error(data.message || `Registration failed (${response.status})`);
+        }
+      }
 
-dispatch(registerSuccess({
-  id: userData.ID,
-  email: userData.email,
-  role: userData.role,
-  isVerified: userData.emailVerified || false,
-  profile: {
-    fullName: form.fullName,
-    email: form.email,
-    phoneNumber: form.phone
-  }
-}));
-setSuccessMessage(data.message || 'Registration successful! Please check your email for verification.');
-    setTimeout(() => {
-  navigate('/login', {
-    state: {
-      message: 'Registration successful! Please check your email for verification and then login.',
-      email: form.email
-    }
-  });
-}, 3000);
+      // Only show success message and redirect - DON'T dispatch Redux action
+      // The user will be added to Redux state only after email verification and login
+      setSuccessMessage(data.message || 'Registration successful! A verification link has been sent to your email.');
+      toast.success('Registration successful! Please check your email.');
+
+      setTimeout(() => {
+        navigate('/login', {
+          state: {
+            message: 'Registration successful! Please check your email for verification and then login.',
+            email: form.email,
+            role: 'patient'
+          }
+        });
+      }, 3000);
 
     } catch (err) {
-          console.error('Registration error:', err); 
-
-      setError(err instanceof Error ? err.message : 'Registration failed. Please try again.');
+      const errorMessage = err instanceof Error ? err.message : 'Registration failed. Please try again.';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -148,7 +143,7 @@ setSuccessMessage(data.message || 'Registration successful! Please check your em
           <div className="flex justify-center mb-4">
             <div className="inline-flex rounded-full border border-gray-300 overflow-hidden">
               <span className="px-3 py-1 text-xs font-medium bg-blue-800 text-white">Patient</span>
-              <a href="/doctorregister" className="px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100">Doctor</a>
+              <Link to="/doctorregister" className="px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100">Doctor</Link>
             </div>
           </div>
 
@@ -159,17 +154,13 @@ setSuccessMessage(data.message || 'Registration successful! Please check your em
               {error}
             </div>
           )}
-{error && (
-  <div className="mb-3 p-2 bg-red-100 text-red-700 rounded-md text-xs">
-    {error}
-  </div>
-)}
 
-{successMessage && (
-  <div className="mb-3 p-3 bg-green-100 text-green-700 rounded-md text-xs">
-    {successMessage}
-  </div>
-)}
+          {successMessage && (
+            <div className="mb-3 p-3 bg-green-100 text-green-700 rounded-md text-xs">
+              {successMessage}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-3">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>

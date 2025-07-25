@@ -1,3 +1,6 @@
+// src/redux/types/authTypes.ts
+
+// ==================== CORE AUTH TYPES ====================
 export interface LoginCredentials {
   email: string;
   password: string;
@@ -23,4 +26,33 @@ export interface AuthState {
   isAuthenticated: boolean;
   loading: boolean;
   error: string | null;
+}
+
+// ==================== FORGOT PASSWORD TYPES ====================
+export interface ForgotPasswordState {
+  loading: boolean;
+  error: string | null;
+  message: string | null;
+  otpVerified: boolean;
+}
+
+export interface ForgotPasswordPayload {
+  email: string;
+}
+
+export interface VerifyOtpPayload {
+  email: string;
+  otp: string;
+}
+
+export interface ResetPasswordPayload {
+  email: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+// ==================== ROOT STATE ====================
+export interface RootAuthState {
+  auth: AuthState;
+  forgotPassword: ForgotPasswordState;
 }

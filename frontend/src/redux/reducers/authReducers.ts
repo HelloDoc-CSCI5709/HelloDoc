@@ -1,6 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import type { AuthState, AuthTokens } from '../types/authTypes';
 import { loginUser, registerUser, refreshTokens } from '../actions/authActions';
+import type { AuthState, AuthTokens, ForgotPasswordState } from '../types/authTypes';
 
 const initialState: AuthState = {
   accessToken: null,
@@ -70,3 +70,27 @@ const authSlice = createSlice({
 
 export const { logout, clearAuthError } = authSlice.actions;
 export default authSlice.reducer;
+
+// Forgot Password Reducer
+export const forgotPasswordInitialState: ForgotPasswordState = {
+  loading: false,
+  error: null,
+  message: null,
+  otpVerified: false
+};
+
+export const forgotPasswordSlice = createSlice({
+  name: 'forgotPassword',
+  initialState: forgotPasswordInitialState,
+  reducers: {
+    resetForgotPasswordState(state) {
+      state.loading = false;
+      state.error = null;
+      state.message = null;
+      state.otpVerified = false;
+    }
+  },
+});
+
+export const { resetForgotPasswordState } = forgotPasswordSlice.actions;
+export const forgotPasswordReducer = forgotPasswordSlice.reducer;

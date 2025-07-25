@@ -1,6 +1,15 @@
+// src/redux/actions/authActions.ts
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import type { LoginCredentials, RegisterData, AuthTokens } from '../types/authTypes';
+import type { 
+  LoginCredentials, 
+  RegisterData, 
+  AuthTokens,
+  ForgotPasswordPayload,
+  VerifyOtpPayload,
+  ResetPasswordPayload
+} from '../types/authTypes';
 
+// Existing Auth Actions
 export const loginUser = createAsyncThunk(
   'auth/login',
   async ({ email, password }: LoginCredentials, { rejectWithValue }) => {
@@ -74,3 +83,80 @@ export const refreshTokens = createAsyncThunk(
     }
   }
 );
+
+// Forgot Password Actions
+export const forgotPassword = createAsyncThunk(
+  'auth/forgotPassword',
+  async ({ email }: ForgotPasswordPayload, { rejectWithValue }) => {
+    try {
+      const response = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Password reset request failed');
+      }
+
+      return await response.json();
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        return rejectWithValue(error.message);
+      }
+      return rejectWithValue('An unknown error occurred');
+    }
+  }
+);
+
+export const verifyOtp = createAsyncThunk(
+  'auth/verifyOtp',
+  async ({ email, otp }: VerifyOtpPayload, { rejectWithValue }) => {
+    try {
+      const response = await fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, otp })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'OTP verification failed');
+      }
+
+      return await response.json();
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        return rejectWithValue(error.message);
+      }
+      return rejectWithValue('An unknown error occurred');
+    }
+  }
+);
+
+export const resetPassword = createAsyncThunk(
+  'auth/resetPassword',
+  async ({ email, newPassword, confirmPassword }: ResetPasswordPayload, { rejectWithValue }) => {
+    try {
+      const response = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, newPassword, confirmPassword })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Password reset failed');
+      }
+
+      return await response.json();
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        return rejectWithValue(error.message);
+      }
+      return rejectWithValue('An unknown error occurred');
+    }
+  }
+);
+

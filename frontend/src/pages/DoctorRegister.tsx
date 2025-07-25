@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAppDispatch } from '../redux/hooks';
-import { registerSuccess } from '../redux/reducers/userReducers'; 
+import { toast } from 'react-toastify';
+
 function DoctorRegister() {
-  const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
@@ -24,8 +23,7 @@ function DoctorRegister() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [successMessage, setSuccessMessage] = useState(''); // Added success message state
-
+  const [successMessage, setSuccessMessage] = useState(''); 
 
   const securityQuestions = [
     "What city were you born in?",
@@ -58,7 +56,7 @@ function DoctorRegister() {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-    setSuccessMessage(''); // Clear previous success message
+    setSuccessMessage('');
 
     if (form.password !== form.confirmPassword) {
       setError('Passwords do not match');
@@ -100,29 +98,24 @@ function DoctorRegister() {
       });
 
       const data = await response.json();
-      console.log('Backend response:', data); // Debug logging
 
       if (!response.ok) {
-        throw new Error(data.message || 'Registration failed');
+        // Handle specific error codes
+        switch (response.status) {
+          case 400:
+            throw new Error(data.message || 'Invalid registration data');
+          case 409:
+            throw new Error(data.message || 'Email already exists. Please use a different email or login.');
+          case 500:
+            throw new Error('Server error. Please try again later.');
+          default:
+            throw new Error(data.message || `Registration failed (${response.status})`);
+        }
       }
 
-      const userData = data.body;
-      console.log('User data:', userData); // Debug logging
- if (!userData || !userData.ID) { // Updated to use ID instead of _id
-        throw new Error('Invalid user data received from server');
-      }
-      dispatch(registerSuccess({ // Changed from loginSuccess to registerSuccess
-        id: userData.ID, // Updated to use ID instead of _id
-        email: userData.email,
-        role: userData.role,
-        isVerified: userData.emailVerified || false,
-        profile: {
-          fullName: form.fullName,
-          email: form.email,
-          phoneNumber: form.phone
-        }
-      }));
-            setSuccessMessage(data.message || 'Registration successful! A verification link has been sent to your email.');
+      // Success - show message and redirect
+      setSuccessMessage(data.message || 'Registration successful! A verification link has been sent to your email.');
+      toast.success('Registration successful! Please check your email.');
 
       setTimeout(() => {
         navigate('/login', { 
@@ -135,10 +128,9 @@ function DoctorRegister() {
       }, 3000);
 
     } catch (err) {
-      console.error('Registration error:', err); // Debug logging
-
-      setError(err instanceof Error ? err.message : 'Registration failed. Please try again.');
-      console.error('Registration error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Registration failed. Please try again.';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }

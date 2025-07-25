@@ -3,21 +3,21 @@ import {
   LayoutGrid,
   Calendar,
   MessageCircle,
-  BookOpen,
+  FileText, 
   Settings,
   LogOut,
 } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 
 const navItems = [
-  { label: 'Dashboard', icon: <LayoutGrid />, to: '/patient-dashboard' },
-  { label: 'calendar', icon: <Calendar />, to: '/patient-calendar' },
+  { label: 'Dashboard', icon: <LayoutGrid />, to: '/doctor-dashboard' },
+  { label: 'Calendar', icon: <Calendar />, to: '/doctor-calendar' },
   { label: 'Chat', icon: <MessageCircle />, to: '/consultations' },
-  { label: 'appointment-booking', icon: <BookOpen />, to: '/book-appointment' },
-  { label: 'Settings', icon: <Settings />, to: '/patient-profile' },
+  { label: 'Health Record', icon: <FileText />, to: '/health-record' }, 
+  { label: 'Settings', icon: <Settings />, to: '/doctor-profile' },
 ];
 
-const LeftSidebar: React.FC = () => {
+const DoctorSidebar: React.FC = () => {
   const navigate = useNavigate();
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -78,4 +78,4 @@ const LeftSidebar: React.FC = () => {
   );
 };
 
-export default LeftSidebar;
+export default DoctorSidebar;
