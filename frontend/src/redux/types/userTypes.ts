@@ -7,6 +7,7 @@ export interface UserProfile {
 }
 
 export interface User {
+  
   id: string;
   email: string;
   name?: string;
@@ -23,6 +24,10 @@ export interface VerificationResponse {
 export type VerificationStatus = 'pending' | 'verified' | 'unverified' | null;
 
 export interface UserState {
+  doctorsError: boolean;
+  selectedDoctor: boolean;
+  doctorsLoading: boolean;
+  doctors: never[];
   profile: UserProfile | undefined;
   userId: string | undefined;
   role: 'patient' | 'doctor' | 'admin' | undefined;

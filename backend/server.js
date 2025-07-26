@@ -8,6 +8,7 @@ const { connectDB } = require('./config/db');
 const { responseBody } = require('./config/responseBody');
 const { initSocket } = require('./socket/socket');
 const http = require('http')
+const messageRoutes = require('./routes/messageRoutes');
 
 require('dotenv').config();
 
@@ -54,6 +55,8 @@ app.use('/api/patient', patientRoutes);
 
 const videoRoutes = require('./routes/videoRoutes');
 app.use('/api/video', videoRoutes);
+app.use('/api/messages', messageRoutes);
+
 
 app.get('/', (req, res) => {
   res.send('HelloDoc Backend API');

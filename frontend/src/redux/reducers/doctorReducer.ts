@@ -19,14 +19,17 @@ import {
 } from '../actions/doctorActions';
 
 const initialState: DoctorState = {
-  profile: null,
-  availability: [],
-  credentials: [],
-  doctorsList: [],
-  publicProfile: null,
-  loading: false,
-  error: null,
-  success: false,
+    profile: null,
+    availability: [],
+    credentials: [],
+    doctorsList: [],
+    publicProfile: null,
+    loading: false,
+    error: null,
+    success: false,
+    fetchLoading: false,
+    fetchError: null,
+    selectedDoctor: null
 };
 
 const doctorReducer = createReducer(initialState, (builder) => {

@@ -9,3 +9,8 @@ export const selectUserError = (state: { user: UserState }) => state.user.error;
 export const selectVerificationStatus = (state: { user: UserState }) => state.user.verificationStatus;
 export const selectIsVerified = (state: { user: UserState }) => 
   state.user.verificationStatus === 'verified';
+
+export const selectDoctors = (state: { user: UserState }) => state.user.doctors || [];
+export const selectDoctorsLoading = (state: { user: UserState }) => state.user.doctorsLoading || false;
+export const selectDoctorsError = (state: { user: UserState }) => state.user.doctorsError;
+export const selectSelectedDoctor = (state: { user: UserState }) => state.user.selectedDoctor;

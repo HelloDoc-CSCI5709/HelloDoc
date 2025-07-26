@@ -3,7 +3,8 @@ import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import dayGridPlugin from "@fullcalendar/daygrid";
-import type { EventClickArg, DateClickArg } from "@fullcalendar/core";
+import type { EventClickArg } from "@fullcalendar/core";
+import type { DateClickArg } from "@fullcalendar/interaction";
 
 import TopNavbar from "../components/Doctor/TopNavbar";
 import DoctorSidebar from "../components/Doctor/DoctorSidebar";

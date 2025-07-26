@@ -3,6 +3,7 @@ import type {
   PatientProfile,
   PatientDocument
 } from '../types/patientTypes';
+import { BASE_URL } from '../../constant_url';
 
 type RequestInit = globalThis.RequestInit;
 type HeadersInit = globalThis.HeadersInit;
@@ -22,8 +23,6 @@ interface ErrorResponse {
   [key: string]: unknown;
 }
 
-const API_BASE_URL = 'http://localhost:8080/api';
-
 const fetchWithAuth = async <T>(url: string, options: RequestInit = {}, isJson: boolean = true): Promise<{ body: T }> => {
   const token = localStorage.getItem('accessToken');
   
@@ -33,7 +32,7 @@ const fetchWithAuth = async <T>(url: string, options: RequestInit = {}, isJson: 
     ...options.headers,
   };
 
-  const response = await fetch(`${API_BASE_URL}${url}`, {
+  const response = await fetch(`${BASE_URL}${url}`, {
     ...options,
     headers,
   });

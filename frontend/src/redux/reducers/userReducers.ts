@@ -9,7 +9,11 @@ const initialState: UserState = {
   error: null,
   verificationStatus: null,
   role: undefined,
-  profile: undefined
+  profile: undefined,
+  doctorsError: undefined,
+  selectedDoctor: undefined,
+  doctorsLoading: false,
+  doctors: []
 };
 
 const userSlice = createSlice({
