@@ -77,6 +77,7 @@ export const logStart = createAsyncThunk<
   'video/logStart',
   async ({ appointmentId, roomId }, { rejectWithValue }) => {
     try {
+      console.log(appointmentId)
       const res = await fetchWithAuth<VideoLog>('/video/logs/start', {
         method: 'POST',
         body: JSON.stringify({ appointmentId, roomId }),

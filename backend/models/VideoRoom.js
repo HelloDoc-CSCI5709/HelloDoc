@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const Appointment = mongoose.model('Appointment')
 
 function generateRoomId(){
-    return Math.random().toString(36).substring(2,6).toUpperCase()
+    return Math.random().toString(36).substring(2,8).toUpperCase()
 }
 
 const videoRoomSchema = new mongoose.Schema({
@@ -23,7 +23,8 @@ const videoRoomSchema = new mongoose.Schema({
         required: true,
         validate: {
             validator: async function(uid){
-                const appt = Appointment.findById(this.appointmentId);
+                const appt = await Appointment.findById(this.appointmentId);
+                console.log(this.appointmentId)
                 return appt && appt.doctorId.equals(uid)
             }
         },
@@ -35,7 +36,7 @@ const videoRoomSchema = new mongoose.Schema({
         required: true,
         validate: {
             validator: async function(uid){
-                const appt = Appointment.findById(this.appointmentId);
+                const appt = await Appointment.findById(this.appointmentId);
                 return appt && appt.patientId.equals(uid)
             }
         },

@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const VideoRoom = mongoose.model('VideoRoom');
 
 const videoLogSchema = new mongoose.Schema({
-    appoinmentId : {
+    appointmentId : {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
         ref: "Appointment",
@@ -27,7 +27,7 @@ const videoLogSchema = new mongoose.Schema({
         required: true,
         validate: {
             validator: async function (uid){
-                const room = VideoRoom.findOne({
+                const room = await VideoRoom.findOne({
                     roomId: this.roomId
                 })
                 return room && (

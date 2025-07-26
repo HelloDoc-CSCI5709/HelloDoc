@@ -96,7 +96,6 @@ const doctorSchema = new Schema({
   strict: true
 });
 
-// Geospatial index for location-based search
 doctorSchema.index({ location: '2dsphere' });
 
 module.exports = mongoose.model('Doctor', doctorSchema);

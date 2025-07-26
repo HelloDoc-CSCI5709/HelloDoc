@@ -3,9 +3,19 @@ const Appointment = require('../models/Appointments')
 const VideoRoom = require('../models/VideoRoom')
 const VideoLog = require('../models/Videolog')
 const { getVideoNamespace } = require('../socket/socket');
+const mongoose = require('mongoose')
 
-const validRoles = ['patient', 'doctor'];
-const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
+const allowedRoles = ['patient', 'doctor'];
+const isValidObjectId = (id) => {
+    // Check if id exists and is a string or ObjectId
+    if (!id) return false;
+    
+    // Convert to string if it's an ObjectId instance
+    const idString = id.toString();
+    
+    // Check if it's a valid 24-character hex string
+    return /^[0-9a-fA-F]{24}$/.test(idString) && mongoose.Types.ObjectId.isValid(idString);
+};
 
 const createRoom = async (req, res, next) => {
     const user = req.user;
@@ -155,10 +165,10 @@ const logStart = async (req, res, next) => {
 
         const payload = {
             logId:    log._id,
-            joinedAt: log.joinedAt
+            joinedAt: log.joinedAt,
+            userId:   user.userId
         }
-
-        videoNS.to(roomId).emit('video:participantJoined', payload)
+        videoNS.to(roomId).emit('video:sessionLogUpdated', payload)
 
         return res.status(201).json(
             responseBody(201, 'Log created', payload)
@@ -167,6 +177,7 @@ const logStart = async (req, res, next) => {
         return next(err);
     }
 }
+
 
 const logEnd = async (req, res, next) => {
     const user = req.user;
@@ -212,7 +223,7 @@ const logEnd = async (req, res, next) => {
         }
 
         const videoNS = getVideoNamespace();
-        videoNS.to(log.roomId).emit('video:participantLeft', payload);
+        videoNS.to(log.roomId).emit('video:sessionLogUpdated', payload);
 
         return res.status(200).json(
             responseBody(200, 'Log ended', payload)
