@@ -64,12 +64,31 @@ const ALLOWED_SPECIALIZATIONS = [
 
 const FILE_CONFIG = {
   ALLOWED_TYPES: ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'],
-  MAX_SIZE: 10 * 1024 * 1024
+  ICS_ALLOWED_TYPES: ['text/calendar', 'application/ics', 'text/plain', 'application/octet-stream'],
+  MAX_SIZE: 10 * 1024 * 1024, 
+  ICS_MAX_SIZE: 2 * 1024 * 1024 
 };
 
 const PAGINATION_LIMITS = {
   MAX_RADIUS: 100000,
   MAX_PAGE_SIZE: 100
+};
+
+const ICS_CONFIG = {
+  MAX_EVENTS: 1000, 
+  DATE_FORMATS: {
+    WITH_TIME: /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z?$/,
+    DATE_ONLY: /^(\d{4})(\d{2})(\d{2})$/
+  },
+  DEFAULT_DURATION_MINUTES: 30, 
+  SUPPORTED_PROPERTIES: [
+    'DTSTART',
+    'DTEND',
+    'SUMMARY',
+    'DESCRIPTION',
+    'LOCATION',
+    'UID'
+  ]
 };
 
 module.exports = {
@@ -83,5 +102,6 @@ module.exports = {
   SMTP,
   ALLOWED_SPECIALIZATIONS,
   FILE_CONFIG,
-  PAGINATION_LIMITS
+  PAGINATION_LIMITS,
+  ICS_CONFIG 
 };
