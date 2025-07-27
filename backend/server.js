@@ -7,8 +7,9 @@ const cookieParser = require('cookie-parser');
 const { connectDB } = require('./config/db');
 const { responseBody } = require('./config/responseBody');
 require('dotenv').config();
+const path = require('path');
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 5050;
 const app = express();
 
 connectDB();
@@ -35,6 +36,8 @@ app.use(mongoSanitize());
 
 app.use(xssClean());
 
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 const authRoutes = require('./routes/authRoutes');
 app.use('/api/auth', authRoutes);
 
@@ -46,6 +49,15 @@ app.use('/api/doctors', doctorRoutes);
 
 const patientRoutes = require('./routes/patientRoutes');
 app.use('/api/patient', patientRoutes);
+
+const healthRecordRoutes = require('./routes/healthRecordRoutes');
+app.use('/api/health-records', healthRecordRoutes);
+
+const patientHAndPRoutes = require('./routes/patientHAndPRoutes');
+app.use('/api/patient-handp', patientHAndPRoutes);
+
+const prescriptionRoutes = require('./routes/prescriptionRoutes');
+app.use('/api/prescriptions', prescriptionRoutes);
 
 app.get('/', (req, res) => {
   res.send('HelloDoc Backend API');
