@@ -7,12 +7,14 @@ const cookieParser = require('cookie-parser');
 const { connectDB } = require('./config/db');
 const { responseBody } = require('./config/responseBody');
 const messageRoutes = require('./routes/messageRoutes');
+const compression = require('compression');
+
 
 require('dotenv').config();
 
 const PORT = process.env.PORT || 8080;
 const app = express();
-
+app.use(compression());
 connectDB();
 
 app.use(helmet());
