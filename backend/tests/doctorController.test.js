@@ -163,7 +163,7 @@ describe('Doctor Controller', () => {
         .expect(400);
 
       expect(response.body.status).toBe(400);
-      expect(response.body.message).toBe('Provided a non-empty array of availability slots');
+      expect(response.body.message).toBe('Provide a non-empty array of availability slots');
     });
   });
 
