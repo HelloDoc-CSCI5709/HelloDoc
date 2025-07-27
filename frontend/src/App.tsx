@@ -19,6 +19,7 @@ import DoctorCalendar from './pages/DoctorCalendar'
 import BookAppointment from './pages/AppointmentBooking'
 //import AdminDashboard from './pages/AdminDashboard'
 
+import ChatPage from './pages/ChatPage'
 
 
 function App() {
@@ -47,6 +48,7 @@ function App() {
         {/*<Route path="/patient/appointments" element={<AppointmentsList />} />*/}
         {/*<Route path="/admin-dashboard" element={<AdminDashboard />} />*/}
 
+        <Route path="/chat" element={<ChatPage />} /> 
 
         <Route path="*" element={<Home/>} /> 
       </Routes>

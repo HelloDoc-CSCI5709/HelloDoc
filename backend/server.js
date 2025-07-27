@@ -6,6 +6,8 @@ const xssClean = require('xss-clean');
 const cookieParser = require('cookie-parser');
 const { connectDB } = require('./config/db');
 const { responseBody } = require('./config/responseBody');
+const messageRoutes = require('./routes/messageRoutes');
+
 require('dotenv').config();
 const path = require('path');
 
@@ -49,6 +51,9 @@ app.use('/api/doctors', doctorRoutes);
 
 const patientRoutes = require('./routes/patientRoutes');
 app.use('/api/patient', patientRoutes);
+
+app.use('/api/messages', messageRoutes);
+
 
 const healthRecordRoutes = require('./routes/healthRecordRoutes');
 app.use('/api/health-records', healthRecordRoutes);
