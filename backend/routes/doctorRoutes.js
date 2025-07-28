@@ -27,7 +27,7 @@ router.get('/profile', authorizeRoles('doctor', 'admin'), getDoctorProfile);
 router.put('/profile/basic', authorizeRoles('doctor', 'admin'), updateBasicDoctorProfile);
 router.put('/profile/availability', authorizeRoles('doctor', 'admin'), updateAvailability);
 router.put('/profile/address', authorizeRoles('doctor', 'admin'), updateDoctorAddress);
-router.get('/availability', authorizeRoles('doctor', 'admin'), getAvailability);
+router.get('/availability', authorizeRoles('patient','doctor', 'admin'), getAvailability);
 
 router.post('/profile-picture', authorizeRoles('doctor'), uploadProfilePictureMiddleware.single('image'), uploadProfilePicture);
 

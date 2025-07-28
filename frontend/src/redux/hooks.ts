@@ -7,7 +7,7 @@ import {
   selectAuthLoading,
   selectAuthError,
   selectAuthState
-} from '../redux/selectors/authSelectors';
+} from './selectors/authSelectors';
 
 import {
   selectCurrentUser,
@@ -15,7 +15,23 @@ import {
   selectUserProfile,
   selectVerificationStatus,
   selectIsVerified
-} from '../redux/selectors/userSelectors';
+} from './selectors/userSelectors';
+
+import {
+  createRoom,
+  getRoomToken,
+  logStart,
+  logEnd,
+  getLogs,
+} from './actions/videoActions'
+
+import {
+  selectVideoRoom,
+  selectVideoLogs,
+  selectVideoLoading,
+  selectVideoError,
+} from './selectors/videoSelectors'
+
 
 export const useAppDispatch = () => useDispatch<AppDispatch>();
 export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
@@ -36,6 +52,11 @@ export const useAppointments = () => useAppSelector((state) => state.appointment
 export const useSelectedAppointment = () => useAppSelector((state) => state.appointment.selectedAppointment);
 export const useAppointmentLoading = () => useAppSelector((state) => state.appointment.loading);
 export const useAppointmentError = () => useAppSelector((state) => state.appointment.error);
+
+export const useVideoRoom = () => useAppSelector(selectVideoRoom)
+export const useVideoLogs = () => useAppSelector(selectVideoLogs)
+export const useVideoLoading = () => useAppSelector(selectVideoLoading)
+export const useVideoError = () => useAppSelector(selectVideoError)
 
 export const useUpcomingAppointments = () => 
   useAppSelector((state) => 
@@ -64,3 +85,30 @@ export const usePatientAppointments = (patientId: string) =>
       (appt) => appt.patientId === patientId
     )
   );
+
+  export const useCreateRoom = () => {
+  const dispatch = useAppDispatch()
+  return (appointmentId: string, expiresInMinutes?: number) =>
+    dispatch(createRoom({ appointmentId, expiresInMinutes }))
+}
+
+export const useGetRoomToken = () => {
+  const dispatch = useAppDispatch()
+  return (appointmentId: string) => dispatch(getRoomToken(appointmentId))
+}
+
+export const useLogStart = () => {
+  const dispatch = useAppDispatch()
+  return (appointmentId: string, roomId: string) =>
+    dispatch(logStart({ appointmentId, roomId }))
+}
+
+export const useLogEnd = () => {
+  const dispatch = useAppDispatch()
+  return (logId: string) => dispatch(logEnd(logId))
+}
+
+export const useGetLogs = () => {
+  const dispatch = useAppDispatch()
+  return (appointmentId: string) => dispatch(getLogs(appointmentId))
+}

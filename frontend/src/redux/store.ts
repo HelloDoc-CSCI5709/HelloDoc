@@ -4,7 +4,8 @@ import { forgotPasswordReducer } from './reducers/authReducers';
 import userReducer from './reducers/userReducers';
 import appointmentReducer from './reducers/appointmentReducer';
 import patientReducer from './reducers/patientReducer';
-import doctorReducer from './reducers/doctorReducer';
+import videoReducer from './reducers/videoReducers'
+import doctorReducer from './reducers/doctorReducer'; 
 //import adminReducer from './reducers/adminReducer'; 
 
 export const store = configureStore({
@@ -14,7 +15,8 @@ export const store = configureStore({
     user: userReducer,
     appointment: appointmentReducer,
     patient: patientReducer,
-    doctor: doctorReducer, 
+    video: videoReducer,
+    doctor: doctorReducer,
     //admin: adminReducer
   },
   middleware: (getDefaultMiddleware) =>
