@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { useLogStart, useLogEnd } from '../redux/hooks';
 
-const SOCKET_URL = 'http://localhost:8080/video';
+const SOCKET_URL = `${import.meta.env.VITE_BACKEND_BASE_URL}/video`;
 
 interface NavigationState {
   mic?: boolean;
@@ -45,13 +45,21 @@ interface IceCandidatePayload {
   from?: string;
 }
 
-const VideoCallPage: React.FC = () => {
+interface JoinRoomResponse {
+  error?: string;
+  isInitiator: boolean;
+  userId: string;
+  userRole: string;
+  isDoctor: boolean;
+  isPatient: boolean;
+  participantCount?: number;
+}
 
+const VideoCallPage: React.FC = () => {
   const { appointmentId, roomId } = useParams<{
     appointmentId: string;
     roomId: string;
   }>();
-
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -81,9 +89,6 @@ const VideoCallPage: React.FC = () => {
 
   const [connectionStatus, setConnectionStatus] = useState('Initializing…');
   
-  const [hasRemoteVideoStream, setHasRemoteVideoStream] = useState(false);
-  const [hasRemoteAudioStream, setHasRemoteAudioStream] = useState(false);
-  
   const [localUser, setLocalUser] = useState<Participant | null>(null);
   const [remoteUser, setRemoteUser] = useState<Participant | null>(null);
 
@@ -94,17 +99,8 @@ const VideoCallPage: React.FC = () => {
   
   const didSetupRef = useRef(false);
 
-  if (!appointmentId || !roomId) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gradient-to-tr from-indigo-900 via-purple-900 to-pink-900">
-        <p className="text-red-400 text-xl">
-          Invalid room or appointment ID.
-        </p>
-      </div>
-    );
-  }
-
-  function cleanupAll() {
+  // Move all hooks before any conditional returns
+  const cleanupAll = useCallback(() => {
     if (pcRef.current) {
         pcRef.current.ontrack = null;
         pcRef.current.onicecandidate = null;
@@ -120,8 +116,6 @@ const VideoCallPage: React.FC = () => {
     }
 
     setRemoteStream(null);
-    setHasRemoteVideoStream(false);
-    setHasRemoteAudioStream(false);
 
     if (socketRef.current) {
         socketRef.current.disconnect();
@@ -138,7 +132,7 @@ const VideoCallPage: React.FC = () => {
     setUserRole(null);
     setParticipantCount(0);
     setConnectionStatus('Call ended');
-  }
+  }, []);
 
   const initializeMedia = useCallback(async (): Promise<MediaStream | null> => {
     console.log('initializeMedia');
@@ -179,6 +173,41 @@ const VideoCallPage: React.FC = () => {
     }
     
   }, [navigationState?.mic, navigationState?.camera]);
+
+  const createOfferManually = useCallback(async () => {
+    const pc = pcRef.current;
+    if (!pc) {
+      console.log('No peer connection available for manual offer');
+      return;
+    }
+
+    if (pc.signalingState !== 'stable' || makingOfferRef.current) {
+      console.log('Cannot create manual offer right now, signalingState:', pc.signalingState);
+      return;
+    }
+
+    try {
+      makingOfferRef.current = true;
+      console.log('Creating manual offer...');
+      const offer = await pc.createOffer({
+        offerToReceiveAudio: true,
+        offerToReceiveVideo: true
+      });
+      await pc.setLocalDescription(offer);
+
+      if (socketRef.current && pc.localDescription) {
+        socketRef.current.emit('video:offer', {
+          offer: pc.localDescription
+        });
+        console.log('Manual offer sent');
+        setConnectionStatus('Offer sent…');
+      }
+    } catch (e) {
+      console.error('Manual offer error:', e);
+    } finally {
+      makingOfferRef.current = false;
+    }
+  }, []);
 
   const createPeerConnection = useCallback(() => {
     console.log('createPeerConnection - cleaning up existing connection first');
@@ -267,13 +296,6 @@ const VideoCallPage: React.FC = () => {
       if (incomingStream) {
         console.log('Setting remote stream with tracks:', incomingStream.getTracks().map(t => t.kind));
         setRemoteStream(incomingStream);
-        
-        if (e.track.kind === 'video') {
-          setHasRemoteVideoStream(true);
-        }
-        if (e.track.kind === 'audio') {
-          setHasRemoteAudioStream(true);
-        }
       }
     };
 
@@ -300,42 +322,7 @@ const VideoCallPage: React.FC = () => {
 
     pcRef.current = pc;
     console.log('New peer connection created');
-  }, []);
-
-  const createOfferManually = useCallback(async () => {
-    const pc = pcRef.current;
-    if (!pc) {
-      console.log('No peer connection available for manual offer');
-      return;
-    }
-
-    if (pc.signalingState !== 'stable' || makingOfferRef.current) {
-      console.log('Cannot create manual offer right now, signalingState:', pc.signalingState);
-      return;
-    }
-
-    try {
-      makingOfferRef.current = true;
-      console.log('Creating manual offer...');
-      const offer = await pc.createOffer({
-        offerToReceiveAudio: true,
-        offerToReceiveVideo: true
-      });
-      await pc.setLocalDescription(offer);
-
-      if (socketRef.current && pc.localDescription) {
-        socketRef.current.emit('video:offer', {
-          offer: pc.localDescription
-        });
-        console.log('Manual offer sent');
-        setConnectionStatus('Offer sent…');
-      }
-    } catch (e) {
-      console.error('Manual offer error:', e);
-    } finally {
-      makingOfferRef.current = false;
-    }
-  }, []);
+  }, [createOfferManually]);
 
   const initializeSocket = useCallback(() => {
     if (socketRef.current) {
@@ -360,7 +347,7 @@ const VideoCallPage: React.FC = () => {
       socket.emit(
         'video:joinRoom',
         { appointmentId, roomId },
-        async (res: any) => {
+        async (res: JoinRoomResponse) => {
           console.log('🎬 joinRoom callback', res);
           
           if (res.error) {
@@ -533,8 +520,6 @@ const VideoCallPage: React.FC = () => {
 
       setRemoteUser(null);
       setRemoteStream(null);
-      setHasRemoteVideoStream(false);
-      setHasRemoteAudioStream(false);
       setParticipantCount(remainingParticipants);
 
       if (remainingParticipants === 1) {
@@ -558,58 +543,7 @@ const VideoCallPage: React.FC = () => {
     });
 
     socketRef.current = socket;
-  }, [appointmentId, roomId, startLog, createPeerConnection, createOfferManually]);
-
-  useEffect(() => {
-    if (remoteVideoRef.current && remoteStream) {
-      console.log('Setting remote stream to video element');
-      remoteVideoRef.current.srcObject = remoteStream;
-    }
-  }, [remoteStream]);
-
-  useEffect(() => {
-    if (didSetupRef.current) return;
-    didSetupRef.current = true;
-
-    const setup = async () => {
-      const media = await initializeMedia();
-      if (media) {
-        initializeSocket();
-      }
-    };
-    setup();
-
-    return () => {
-      cleanupAll();
-    };
-  }, [
-    initializeMedia,
-    initializeSocket
-  ]);
-
-  useEffect(() => {
-    if (localVideoRef.current) {
-      localVideoRef.current.muted = true;
-    }
-  }, []);
-
-  useEffect(() => {
-    if (streamRef.current) {
-      streamRef.current.getAudioTracks().forEach(track => {
-        track.enabled = micEnabled;
-        console.log(`Audio track ${micEnabled ? 'enabled' : 'disabled'}`);
-      });
-    }
-  }, [micEnabled]);
-
-  useEffect(() => {
-    if (streamRef.current) {
-      streamRef.current.getVideoTracks().forEach(track => {
-        track.enabled = cameraEnabled;
-        console.log(`Video track ${cameraEnabled ? 'enabled' : 'disabled'}`);
-      });
-    }
-  }, [cameraEnabled]);
+  }, [appointmentId, roomId, startLog, createPeerConnection, createOfferManually, navigate, cleanupAll]);
 
   const toggleMic = useCallback(() => {
     setMicEnabled(prev => {
@@ -637,7 +571,66 @@ const VideoCallPage: React.FC = () => {
     }
     cleanupAll();
     navigate(-1);
-  }, [logId, endLog, navigate]);
+  }, [logId, endLog, navigate, cleanupAll]);
+
+  useEffect(() => {
+    if (remoteVideoRef.current && remoteStream) {
+      console.log('Setting remote stream to video element');
+      remoteVideoRef.current.srcObject = remoteStream;
+    }
+  }, [remoteStream]);
+
+  useEffect(() => {
+    if (didSetupRef.current) return;
+    didSetupRef.current = true;
+
+    const setup = async () => {
+      const media = await initializeMedia();
+      if (media) {
+        initializeSocket();
+      }
+    };
+    setup();
+
+    return () => {
+      cleanupAll();
+    };
+  }, [initializeMedia, initializeSocket, cleanupAll]);
+
+  useEffect(() => {
+    if (localVideoRef.current) {
+      localVideoRef.current.muted = true;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (streamRef.current) {
+      streamRef.current.getAudioTracks().forEach(track => {
+        track.enabled = micEnabled;
+        console.log(`Audio track ${micEnabled ? 'enabled' : 'disabled'}`);
+      });
+    }
+  }, [micEnabled]);
+
+  useEffect(() => {
+    if (streamRef.current) {
+      streamRef.current.getVideoTracks().forEach(track => {
+        track.enabled = cameraEnabled;
+        console.log(`Video track ${cameraEnabled ? 'enabled' : 'disabled'}`);
+      });
+    }
+  }, [cameraEnabled]);
+
+  // Early return after all hooks are called
+  if (!appointmentId || !roomId) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gradient-to-tr from-indigo-900 via-purple-900 to-pink-900">
+        <p className="text-red-400 text-xl">
+          Invalid room or appointment ID.
+        </p>
+      </div>
+    );
+  }
 
   const youLabel = localUser
     ? `You (${userRole?.toUpperCase() || 'Unknown'}) – ${
@@ -757,7 +750,7 @@ const VideoCallPage: React.FC = () => {
             </div>
           )}
 
-          {process.env.NODE_ENV === 'development' && remoteStream && (
+          {typeof window !== 'undefined' && window.location.hostname === 'localhost' && remoteStream && (
             <div className="absolute bottom-4 right-4 px-2 py-1 bg-red-500/80 backdrop-blur-sm rounded-lg">
               <span className="text-white text-xs font-mono">
                 Stream: {remoteStream.getTracks().map(t => `${t.kind}(${t.readyState})`).join(', ')}

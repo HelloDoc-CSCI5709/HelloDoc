@@ -16,6 +16,8 @@ export default [
       globals: {
         ...globals.browser,
         ...globals.es2021,
+        RTCSessionDescriptionInit: 'readonly',
+        RTCIceCandidateInit:      'readonly',
       },
     },
     plugins: {

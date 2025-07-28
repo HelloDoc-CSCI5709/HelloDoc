@@ -4,7 +4,7 @@ import type { ApiResponse }         from '../types/appointmentTypes'  // re‑us
 
 declare type RequestInit = globalThis.RequestInit
 
-const API_BASE_URL = 'http://localhost:8080/api'
+const API_BASE_URL = `${import.meta.env.VITE_BACKEND_BASE_URL}/api`
 
 interface ErrorResponse {
   message: string
