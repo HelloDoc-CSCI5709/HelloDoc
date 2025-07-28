@@ -14,7 +14,8 @@ const {
   getDoctorCredentials,
   approveDoctorCredential,
   rejectDoctorCredential,
-  getDoctorCredentialById
+  getDoctorCredentialById,
+  getPatientProfileForDoctor
 } = require('../controllers/doctorController');
 const { uploadCredential, uploadProfilePicture: uploadProfilePictureMiddleware } = require('../middleware/upload/doctorDocs');
 
@@ -44,5 +45,5 @@ router.get('/:doctorId/credentials', authorizeRoles('doctor'), getDoctorCredenti
 router.put('/:doctorId/credentials/:credentialId/approve', authorizeRoles('admin'), approveDoctorCredential);
 router.put('/:doctorId/credentials/:credentialId/reject', authorizeRoles('admin'), rejectDoctorCredential);
 router.get('/:doctorId/credentials/:credentialId', authorizeRoles('doctor', 'admin'), getDoctorCredentialById);
-
+router.get('/view-profile/:patientId', authorizeRoles('doctor', 'admin'), getPatientProfileForDoctor);
 module.exports = router;

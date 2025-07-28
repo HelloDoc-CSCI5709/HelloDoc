@@ -20,20 +20,7 @@ const patientProfileSchema = new mongoose.Schema({
     type: Date,
     required: true
   },
-  bloodType: {
-    type: String,
-    enum: ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'],
-    default: null
-  },
-  allergies: {
-    type: String,
-    default: ''
-  },
   emergencyContact: {
-    type: String,
-    default: ''
-  },
-  medicalNote: {
     type: String,
     default: ''
   }

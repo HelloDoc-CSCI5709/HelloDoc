@@ -1,6 +1,11 @@
 const User = require('../models/User');
 const PatientProfile = require('../models/PatientProfile');
+const HAndPRecord = require('../models/PatientHAndPRecord');
+const PatientDocument = require('../models/PatientDocument');
+const HealthRecord = require('../models/HealthRecord');
 const { responseBody } = require('../config/responseBody');
+
+const BASE_URL = process.env.BASE_URL || 'http://localhost:5050';
 
 const getPatientProfile = async (req, res) => {
   try {
@@ -13,14 +18,78 @@ const getPatientProfile = async (req, res) => {
 
     const profile = await PatientProfile.findOne({ userId });
 
+    const healthRecord = await HAndPRecord.findOne({ patientId: userId }).populate('doctorNotes.doctorId', 'fullName email');
+
+    // 🔽 Get PatientDocument files (insurance card, health card, etc.)
+    const patientDocs = await PatientDocument.find({ userId });
+    const patientDocumentLinks = {};
+    patientDocs.forEach(doc => {
+      if (doc.docType) {
+        patientDocumentLinks[doc.docType] = `${BASE_URL}/uploads/patient/${doc.fileName}`;
+      }
+    });
+
+    // 🔽 Get HealthRecord files (e.g. x-rays, prescriptions)
+    const healthDocs = await HealthRecord.find({ patientId: userId });
+    const healthRecordLinks = {};
+    healthDocs.forEach(doc => {
+      const key = doc.documentType || `record-${doc._id}`;
+      healthRecordLinks[key] = `${BASE_URL}/uploads/health-records/${doc.fileName}`;
+    });
+
     return res.status(200).json(
       responseBody(200, 'Patient profile fetched', {
         user,
-        profile
+        profile,
+        healthRecord,
+        documents: {
+          patientDocuments: patientDocumentLinks,
+          healthRecords: healthRecordLinks
+        }
       })
     );
   } catch (err) {
     console.error('Get Patient Profile error:', err);
+    return res.status(500).json(responseBody(500, 'Internal Server error', null));
+  }
+};
+
+const getPatientProfileForDoctor = async (req, res) => {
+  try {
+    const { patientId } = req.params;
+
+    const user = await User.findById(patientId).select('role');
+    if (!user || user.role !== 'patient') {
+      return res.status(404).json(responseBody(404, 'Patient user not found', null));
+    }
+
+    const profile = await PatientProfile.findOne({ userId: patientId });
+    const healthRecord = await HAndPRecord.findOne({ patientId }).populate('doctorNotes.doctorId', 'fullName email');
+
+    const patientDocs = await PatientDocument.find({ userId: patientId });
+    const patientDocumentLinks = {};
+    patientDocs.forEach(doc => {
+      patientDocumentLinks[doc.docType] = `${BASE_URL}/uploads/patient/${doc.fileName}`;
+    });
+
+    const healthDocs = await HealthRecord.find({ patientId });
+    const healthRecordLinks = {};
+    healthDocs.forEach(doc => {
+      healthRecordLinks[doc.documentType] = `${BASE_URL}/uploads/health-records/${doc.fileName}`;
+    });
+
+    return res.status(200).json(
+      responseBody(200, 'Patient profile fetched', {
+        profile,
+        healthRecord,
+        documents: {
+          patientDocuments: patientDocumentLinks,
+          healthRecords: healthRecordLinks
+        }
+      })
+    );
+  } catch (err) {
+    console.error('Get Patient Profile (Doctor View) error:', err);
     return res.status(500).json(responseBody(500, 'Internal Server error', null));
   }
 };
@@ -32,23 +101,15 @@ const updatePatientProfile = async (req, res) => {
       mobile,
       dob,
       gender,
-      bloodType,
-      allergies,
-      emergencyContact,
-      medicalNote
+      emergencyContact
     } = req.body;
 
     const errors = [];
 
     const genderEnum = PatientProfile.schema.path('gender').enumValues;
-    const bloodTypeEnum = PatientProfile.schema.path('bloodType').enumValues;
 
     if (gender && !genderEnum.includes(gender)) {
       errors.push(`Gender must be one of: ${genderEnum.join(', ')}`);
-    }
-
-    if (bloodType && !bloodTypeEnum.includes(bloodType)) {
-      errors.push(`Blood type must be one of: ${bloodTypeEnum.join(', ')}`);
     }
 
     if (mobile && !/^\d{10}$/.test(mobile)) {
@@ -73,10 +134,7 @@ const updatePatientProfile = async (req, res) => {
       profile.mobile = mobile;
       profile.dob = dob;
       profile.gender = gender;
-      profile.bloodType = bloodType;
-      profile.allergies = allergies;
       profile.emergencyContact = emergencyContact;
-      profile.medicalNote = medicalNote;
 
       await profile.save();
 
@@ -90,10 +148,7 @@ const updatePatientProfile = async (req, res) => {
       mobile,
       dob,
       gender,
-      bloodType,
-      allergies,
-      emergencyContact,
-      medicalNote
+      emergencyContact
     });
 
     await profile.save();
@@ -106,7 +161,6 @@ const updatePatientProfile = async (req, res) => {
     return res.status(500).json(responseBody(500, 'Server error', null));
   }
 };
-
 
 module.exports = {
   getPatientProfile,

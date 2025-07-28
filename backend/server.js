@@ -11,8 +11,9 @@ const http = require('http')
 const messageRoutes = require('./routes/messageRoutes');
 
 require('dotenv').config();
+const path = require('path');
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 5050;
 const app = express();
 const server = http.createServer(app);
 
@@ -41,6 +42,8 @@ app.use((req, res, next) => {
 app.use(mongoSanitize());
 app.use(xssClean());
 
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 const authRoutes = require('./routes/authRoutes');
 app.use('/api/auth', authRoutes);
 
@@ -57,6 +60,15 @@ const videoRoutes = require('./routes/videoRoutes');
 app.use('/api/video', videoRoutes);
 app.use('/api/messages', messageRoutes);
 
+
+const healthRecordRoutes = require('./routes/healthRecordRoutes');
+app.use('/api/health-records', healthRecordRoutes);
+
+const patientHAndPRoutes = require('./routes/patientHAndPRoutes');
+app.use('/api/patient-handp', patientHAndPRoutes);
+
+const prescriptionRoutes = require('./routes/prescriptionRoutes');
+app.use('/api/prescriptions', prescriptionRoutes);
 
 app.get('/', (req, res) => {
   res.send('HelloDoc Backend API');
