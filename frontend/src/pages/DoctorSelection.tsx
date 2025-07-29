@@ -5,7 +5,17 @@ import Sidebar from '../components/Patient/LeftSidebar';
 import TopNavBar from '../components/Patient/TopNavbar';
 import axios from 'axios';
 
-const DoctorSelection = () => {
+interface RawDoctor {
+  doctorId?: {
+    _id: string;
+    fullName: string;
+  };
+  specialization?: string[];
+  address?: string;
+  education?: string;
+}
+
+const DoctorSelection: React.FC = () => {
   const navigate = useNavigate();
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(true);
@@ -14,22 +24,19 @@ const DoctorSelection = () => {
     const fetchDoctors = async () => {
       try {
         const res = await axios.get(`${import.meta.env.VITE_BACKEND_BASE_URL}/api/doctors/list/all`);
-        const fetched = res.data?.body?.doctors || [];
+        const fetched: RawDoctor[] = res.data?.body?.doctors || [];
 
-        const mappedDoctors: Doctor[] = fetched.map((doc: any) => ({
-          doctorId: doc.doctorId?._id || '', // ✅ include doctorId
+        const mappedDoctors: Doctor[] = fetched.map((doc) => ({
+          doctorId: doc.doctorId?._id || '',
           name: doc.doctorId?.fullName || 'Doctor',
           specialty: doc.specialization?.[0] || 'General',
           clinic: doc.address || 'Clinic address unavailable',
           experience: doc.education || 'Experience info unavailable',
-          rating: '4.5', // placeholder rating
-          reviews: 123,  // placeholder review count
+          rating: '4.5',
+          reviews: 123,  
           nextAvailable: 'Available now',
           image: `https://ui-avatars.com/api/?name=${encodeURIComponent(doc.doctorId?.fullName || 'Doctor')}`
         }));
-
-        console.log("Fetched doctors:", fetched);
-        console.log("Mapped doctors:", mappedDoctors);
 
         setDoctors(mappedDoctors);
       } catch (err) {

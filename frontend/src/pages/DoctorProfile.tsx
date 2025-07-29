@@ -3,7 +3,7 @@ import TopNavBar from "../components/Patient/TopNavbar";
 import SideBar from "../components/Patient/LeftSidebar";
 import { useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { toast } from "react-toastify";
 import "react-datepicker/dist/react-datepicker.css";
 import { BASE_URL } from "../constant_url";
@@ -54,7 +54,7 @@ const DoctorProfile: React.FC = () => {
         reason,
       };
 
-      const res = await axios.post(`${BASE_URL}/api/appointments/book`, payload, {
+      await axios.post(`${BASE_URL}/api/appointments/book`, payload, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -62,9 +62,12 @@ const DoctorProfile: React.FC = () => {
 
       toast.success("Appointment booked successfully!");
       navigate("/patient-calendar");
-    } catch (err: any) {
-      console.error("❌ Booking failed:", err.response?.data || err.message);
-      toast.error(err.response?.data?.message || "Booking failed");
+    } catch (err) {
+      const error = err as AxiosError;
+      console.error("Booking failed:", error.response?.data || error.message);
+      toast.error(
+        (error.response?.data as any)?.message || "Booking failed"
+      );
     }
   };
 

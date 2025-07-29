@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { decodeToken } from '../../utils/decodeToken';
 import AppointmentList from './AppointmentList';
 import ChatBox from './ChatBox';
@@ -17,7 +17,7 @@ const ChatLayout = () => {
   const userId = decoded?.userId;
   const role = decoded?.role;
 
-  const fetchAppointments = async () => {
+  const fetchAppointments = useCallback(async () => {
     try {
       const res = await fetch(`${import.meta.env.VITE_BACKEND_BASE_URL}/api/appointments`, {
         headers: {
@@ -29,9 +29,9 @@ const ChatLayout = () => {
     } catch (err) {
       console.error('Failed to fetch appointments', err);
     }
-  };
+  }, [token]);
 
-  const fetchMessages = async (appointmentId: string) => {
+  const fetchMessages = useCallback(async (appointmentId: string) => {
     try {
       const res = await fetch(`${import.meta.env.VITE_BACKEND_BASE_URL}/api/messages/${appointmentId}`, {
         headers: {
@@ -43,18 +43,18 @@ const ChatLayout = () => {
     } catch (err) {
       console.error('Failed to fetch messages', err);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     if (!userId || !token || !role) return;
     fetchAppointments();
-  }, [userId, token, role]);
+  }, [userId, token, role, fetchAppointments]);
 
   useEffect(() => {
     if (activeAppointment) {
       fetchMessages(activeAppointment._id);
     }
-  }, [activeAppointment]);
+  }, [activeAppointment, fetchMessages]);
 
   useEffect(() => {
     if (!activeAppointment) return;
@@ -64,7 +64,7 @@ const ChatLayout = () => {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [activeAppointment]);
+  }, [activeAppointment, fetchMessages]);
 
   if (!userId || !token || !role) {
     return (
