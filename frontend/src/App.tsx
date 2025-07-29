@@ -21,6 +21,8 @@ import VideoCallPage from './pages/VideoCallPage'
 import BookAppointment from './pages/AppointmentBooking'
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import DoctorSettingsPage from "./pages/DoctorSettingsPage";
+
 
 //import AdminDashboard from './pages/AdminDashboard'
 
@@ -53,6 +55,7 @@ function App() {
           {/*<Route path="/admin-dashboard" element={<AdminDashboard />} />*/}
           <Route path="/chat" element={<ChatPage />} /> 
           <Route path="/video/:appointmentId" element={<PreJoinVideo />} />
+          <Route path="/doctor-settings" element={<DoctorSettingsPage />} />
           <Route
             path="/video/:appointmentId/room/:roomId"
             element={<VideoCallPage />}
