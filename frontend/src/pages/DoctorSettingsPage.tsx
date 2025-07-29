@@ -3,7 +3,6 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import Sidebar from "../components/Doctor/DoctorSidebar";
 import TopNavBar from "../components/Doctor/TopNavbar";
-import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { BASE_URL } from "../constant_url";
 
