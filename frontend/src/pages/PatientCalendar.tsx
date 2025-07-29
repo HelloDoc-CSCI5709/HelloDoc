@@ -1,41 +1,67 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
-import interactionPlugin from "@fullcalendar/interaction";
+import interactionPlugin, { type DateClickArg } from "@fullcalendar/interaction";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import type { EventClickArg } from "@fullcalendar/core";
+import axios from "axios";
 
 import TopNavbar from "../components/Patient/TopNavbar";
 import LeftSidebar from "../components/Patient/LeftSidebar";
 
+const BASE_URL = import.meta.env.VITE_API_BASE;
+
+interface Appointment {
+  _id: string;
+  scheduledFor: string;
+  doctorId: {
+    fullName: string;
+    _id: string;
+  };
+}
+
 const PatientCalendar: React.FC = () => {
-  const events = [
-    {
-      id: "1",
-      title: "Dr. Kim Appointment",
-      start: "2025-07-25T08:00:00",
-      color: "#f43f5e",
-      extendedProps: {
-        joinLink: "/join/1",
-      },
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      const token = localStorage.getItem("accessToken");
+      if (!token) return;
+
+      try {
+        const res = await axios.get(`${BASE_URL}/api/appointments`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setAppointments(res.data.body);
+      } catch (err) {
+        console.error("Failed to fetch appointments", err);
+      }
+    };
+
+    fetchAppointments();
+  }, []);
+
+  const events = appointments.map((appt) => ({
+    id: appt._id,
+    title: `Appointment with ${appt.doctorId.fullName}`,
+    start: appt.scheduledFor,
+    color: "#3b82f6",
+    extendedProps: {
+      joinLink: `/video/${appt._id}`,
+      doctorName: appt.doctorId.fullName,
     },
-    {
-      id: "2",
-      title: "Dr. Stacy Appointment",
-      start: "2025-07-26T09:30:00",
-      color: "#10b981",
-      extendedProps: {
-        joinLink: "/join/2",
-      },
-    },
-  ];
+  }));
 
   const handleEventClick = (info: EventClickArg) => {
     const link = info.event.extendedProps.joinLink;
-    if (link) window.location.href = link;
+    if (link) {
+      window.location.href = link;
+    }
   };
 
-  const handleDateClick = (info: { dateStr: string }) => {
+  const handleDateClick = (info: DateClickArg) => {
     const confirmed = window.confirm(
       `Do you want to book an appointment on ${info.dateStr}?`
     );

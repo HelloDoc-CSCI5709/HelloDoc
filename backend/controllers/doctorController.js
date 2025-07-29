@@ -1030,13 +1030,13 @@ const listDoctors = handleAsync(async (req, res) => {
     state,
     country
   } = req.query;
-  
+
   const errors = [];
-  
+
   if (specialization && !ALLOWED_SPECIALIZATIONS.includes(specialization)) {
     errors.push('specialization is invalid');
   }
-  
+
   if ((lng && !lat) || (!lng && lat)) {
     errors.push('Both lng and lat must be provided together');
   }
@@ -1049,22 +1049,22 @@ const listDoctors = handleAsync(async (req, res) => {
     if (isNaN(longitude) || longitude < -180 || longitude > 180) {
       errors.push('lng must be a number between -180 and 180');
     }
-    
+
     if (isNaN(latitude) || latitude < -90 || latitude > 90) {
       errors.push('lat must be a number between -90 and 90');
     }
-  }
-  
-  const radiusNum = parseInt(radius);
-  if (isNaN(radiusNum) || radiusNum <= 0 || radiusNum > PAGINATION_LIMITS.MAX_RADIUS) {
-    errors.push(`radius must be a positive number up to ${PAGINATION_LIMITS.MAX_RADIUS} meters`);
-  }
-  
-  const { errors: paginationErrors, pageNum, limitNum } = validatePagination(page, limit);
-  errors.push(...paginationErrors);
-  
-  if (errors.length > 0) {
-    return res.status(400).json(responseBody(400, 'Validation error', errors));
+    
+    const radiusNum = parseInt(radius);
+    if (isNaN(radiusNum) || radiusNum <= 0 || radiusNum > PAGINATION_LIMITS.MAX_RADIUS) {
+      errors.push(`radius must be a positive number up to ${PAGINATION_LIMITS.MAX_RADIUS} meters`);
+    }
+    
+    const { errors: paginationErrors, pageNum, limitNum } = validatePagination(page, limit);
+    errors.push(...paginationErrors);
+    
+    if (errors.length > 0) {
+      return res.status(400).json(responseBody(400, 'Validation error', errors));
+    }
   }
   
   try {
