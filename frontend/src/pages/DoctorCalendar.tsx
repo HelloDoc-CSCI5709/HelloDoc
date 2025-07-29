@@ -1,50 +1,77 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
-import interactionPlugin from "@fullcalendar/interaction";
+import interactionPlugin, { type DateClickArg } from "@fullcalendar/interaction";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import type { EventClickArg } from "@fullcalendar/core";
-import type { DateClickArg } from "@fullcalendar/interaction";
+import axios from "axios";
 
 import TopNavbar from "../components/Doctor/TopNavbar";
 import DoctorSidebar from "../components/Doctor/DoctorSidebar";
 
+const BASE_URL = import.meta.env.VITE_API_BASE;
+
+interface Appointment {
+  _id: string;
+  scheduledFor: string;
+  reason: string;
+  patientId: {
+    _id: string;
+    fullName: string;
+  };
+  doctorId: {
+    _id: string;
+    fullName: string;
+  };
+}
+
 const DoctorCalendar: React.FC = () => {
-  const events = [
-    {
-      id: "1",
-      title: "John Smith Appointment",
-      start: "2025-07-25T08:00:00",
-      color: "#f43f5e",
-      extendedProps: {
-        patientName: "John Smith",
-        appointmentType: "General Checkup",
-        joinLink: "/join/1",
-      },
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [doctorId, setDoctorId] = useState("");
+
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      const token = localStorage.getItem("accessToken");
+      if (!token) return;
+
+      try {
+        // Decode JWT to get doctorId
+        const decoded = JSON.parse(atob(token.split(".")[1]));
+        const loggedInDoctorId =
+          decoded.id || decoded._id || decoded.userId || decoded.user?.id || "";
+
+        setDoctorId(loggedInDoctorId);
+
+        const res = await axios.get(`${BASE_URL}/api/appointments`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        setAppointments(res.data.body);
+      } catch (err) {
+        console.error("Failed to fetch doctor appointments", err);
+      }
+    };
+
+    fetchAppointments();
+  }, []);
+
+  const doctorAppointments = appointments.filter(
+    (appt) => appt.doctorId?._id === doctorId
+  );
+
+  const events = doctorAppointments.map((appt) => ({
+    id: appt._id,
+    title: `Appt with ${appt.patientId.fullName}`,
+    start: appt.scheduledFor,
+    color: "#3b82f6",
+    extendedProps: {
+      patientName: appt.patientId.fullName,
+      appointmentType: appt.reason,
+      joinLink: `/video/${appt._id}`,
     },
-    {
-      id: "2",
-      title: "Sarah Johnson Appointment",
-      start: "2025-07-26T09:30:00",
-      color: "#10b981",
-      extendedProps: {
-        patientName: "Sarah Johnson",
-        appointmentType: "Follow-up",
-        joinLink: "/join/2",
-      },
-    },
-    {
-      id: "3",
-      title: "Michael Brown Appointment",
-      start: "2025-07-27T14:00:00",
-      color: "#3b82f6",
-      extendedProps: {
-        patientName: "Michael Brown",
-        appointmentType: "Consultation",
-        joinLink: "/join/3",
-      },
-    },
-  ];
+  }));
 
   const handleEventClick = (info: EventClickArg) => {
     const link = info.event.extendedProps.joinLink;
@@ -56,7 +83,6 @@ const DoctorCalendar: React.FC = () => {
       `Do you want to block this time slot on ${info.dateStr}?`
     );
     if (confirmed) {
-      // Handle blocking time slot or creating availability
       console.log(`Blocking time slot: ${info.dateStr}`);
     }
   };

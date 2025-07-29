@@ -20,7 +20,7 @@ const {
 const { uploadCredential, uploadProfilePicture: uploadProfilePictureMiddleware } = require('../middleware/upload/doctorDocs');
 
 const router = Router();
-
+router.get('/list/all', listDoctors);
 router.use(verifyToken);
 
 router.get('/profile', authorizeRoles('doctor', 'admin'), getDoctorProfile);
@@ -32,7 +32,7 @@ router.get('/availability', authorizeRoles('patient','doctor', 'admin'), getAvai
 router.post('/profile-picture', authorizeRoles('doctor'), uploadProfilePictureMiddleware.single('image'), uploadProfilePicture);
 
 router.get('/public/:doctorId', getPublicDoctorProfile);
-router.get('/list/all', listDoctors);
+
 
 router.post(
   '/:doctorId/credentials',

@@ -136,7 +136,7 @@ const PatientDocumentUpload: React.FC = () => {
           />
         ))}
 
-        {/* Health Card */}
+        {/* Health Card Section */}
         <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-6 hover:shadow-lg transition-all duration-300">
           <div className="mb-4">
             <label className="block text-gray-800 font-semibold text-lg">Health Card</label>
@@ -159,7 +159,7 @@ const PatientDocumentUpload: React.FC = () => {
                 ))}
               </div>
               <div className="flex gap-4 pt-4">
-                <button onClick={handleHealthUpload} className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm disabled:opacity-50">Upload Health Card</button>
+                <button onClick={handleHealthUpload} className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm disabled:opacity-50">Submit Health Card</button>
                 <button onClick={() => handleCancelUpload('health')} className="px-6 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-sm disabled:opacity-50 border border-gray-300">Cancel</button>
               </div>
             </div>
@@ -246,7 +246,7 @@ const UploadSection: React.FC<UploadSectionProps> = ({ title, description, file,
           <input type="file" accept=".pdf, .jpg, .jpeg, .png" onChange={handleFileChange} className="w-full text-sm text-gray-500 file:mr-4 file:py-3 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 file:transition-colors file:cursor-pointer cursor-pointer" />
           {renderPreview()}
           <div className="flex gap-4 pt-2">
-            <button onClick={onUpload} className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm disabled:opacity-50">Upload {title}</button>
+            <button onClick={onUpload} className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm disabled:opacity-50">Submit {title}</button>
             <button onClick={onCancel} className="px-6 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-sm disabled:opacity-50 border border-gray-300">Cancel</button>
           </div>
         </div>

@@ -212,39 +212,39 @@ function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center px-4 py-8 sm:px-6 lg:px-8">
-      <div className="max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="hidden md:flex flex-col justify-center items-center bg-gradient-to-br from-blue-900 to-blue-700 text-white p-8 rounded-2xl shadow-md">
-          <h1 className="text-3xl font-bold mb-3 text-pink-400">Hello<span className="text-white">Doc</span></h1>
-          <img src="/login-illustration.png" alt="Login" className="w-56 h-auto mb-4" />
-          <p className="text-base font-semibold text-center mb-1">Your Health, Your Way — Anytime, Anywhere.</p>
-          <p className="text-xs text-center max-w-md">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center px-4 py-8 sm:px-6 lg:px-8">
+      <div className="max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="hidden md:flex flex-col justify-center items-center bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 text-white p-10 rounded-3xl shadow-2xl">
+          <h1 className="text-4xl font-bold mb-4 text-pink-400">Hello<span className="text-white">Doc</span></h1>
+          <img src="/login-illustration.png" alt="Login" className="w-64 h-auto mb-6 drop-shadow-lg" />
+          <p className="text-lg font-semibold text-center mb-2">Your Health, Your Way — Anytime, Anywhere.</p>
+          <p className="text-sm text-center max-w-md text-blue-100 leading-relaxed">
             Log in to connect with licensed healthcare providers for secure, convenient care. New here? Sign up to get started on your path to better health.
           </p>
         </div>
 
-        <div className="bg-white p-6 shadow-md rounded-xl">
-          <div className="mb-2">
-            <Link to="/" className="text-blue-600 text-xs underline hover:text-blue-800">← Back to Home</Link>
+        <div className="bg-white p-8 shadow-2xl rounded-3xl border border-gray-100">
+          <div className="mb-4">
+            <Link to="/" className="text-blue-600 text-sm font-medium underline hover:text-blue-800 transition-colors duration-200">← Back to Home</Link>
           </div>
 
-          <h2 className="text-xl font-bold text-gray-800 mb-4">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6">
             {step === 1 ? 'Login to Your Account' : 'Answer Security Question'}
           </h2>
 
           {error && (
-            <div className="mb-3 p-2 bg-red-100 text-red-700 rounded-md text-xs">
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
               {error}
             </div>
           )}
 
           {step === 1 ? (
-            <form onSubmit={handleStepOne} className="space-y-3">
+            <form onSubmit={handleStepOne} className="space-y-5">
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
                 <input
                   type="email"
-                  className="w-full border border-gray-300 rounded px-2 py-1 text-xs"
+                  className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
                   placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -253,10 +253,10 @@ function Login() {
               </div>
 
               <div className="relative">
-                <label className="block text-xs font-medium text-gray-700 mb-1">Password</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
                 <input
                   type={showPassword ? 'text' : 'password'}
-                  className="w-full border border-gray-300 rounded px-2 py-1 text-xs pr-6"
+                  className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 pr-12 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -266,28 +266,28 @@ function Login() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-1 bottom-1 text-xs text-blue-600 px-1"
+                  className="absolute right-3 top-9 text-sm text-blue-600 font-medium hover:text-blue-800 transition-colors duration-200"
                 >
                   {showPassword ? 'Hide' : 'Show'}
                 </button>
               </div>
 
-              <div className="flex items-center justify-between text-xs text-gray-600">
-                <label className="flex items-center gap-2">
-                  <input type="checkbox" className="form-checkbox" />
-                  Remember Me
+              <div className="flex items-center justify-between text-sm text-gray-600">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" className="form-checkbox w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
+                  <span className="font-medium">Remember Me</span>
                 </label>
-                <Link to="/forgot-password" className="text-blue-600 hover:underline">Forgot Password?</Link>
+                <Link to="/forgot-password" className="text-blue-600 font-medium hover:text-blue-800 hover:underline transition-colors duration-200">Forgot Password?</Link>
               </div>
 
               <button
                 type="submit"
                 disabled={isLoading}
-                className={`w-full bg-blue-800 text-white py-1.5 rounded hover:bg-blue-900 transition flex justify-center items-center ${isLoading ? 'opacity-75' : ''}`}
+                className={`w-full bg-gradient-to-r from-blue-700 to-blue-800 text-white py-3 rounded-lg font-semibold hover:from-blue-800 hover:to-blue-900 transition-all duration-200 flex justify-center items-center shadow-lg hover:shadow-xl transform hover:scale-105 ${isLoading ? 'opacity-75 cursor-not-allowed' : ''}`}
               >
                 {isLoading ? (
                   <>
-                    <svg className="animate-spin -ml-1 mr-2 h-3 w-3 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
@@ -296,25 +296,27 @@ function Login() {
                 ) : 'Continue'}
               </button>
 
-              <p className="text-xs text-center mt-3 text-gray-600">
+              <p className="text-sm text-center mt-6 text-gray-600">
                 Don't have an account?{' '}
-                <Link to="/patientregister" className="text-blue-600 hover:underline">Sign Up as Patient</Link>
+                <Link to="/patientregister" className="text-blue-600 font-medium hover:text-blue-800 hover:underline transition-colors duration-200">Sign Up as Patient</Link>
                 {' '}or{' '}
-                <Link to="/doctorregister" className="text-blue-600 hover:underline">Doctor</Link>
+                <Link to="/doctorregister" className="text-blue-600 font-medium hover:text-blue-800 hover:underline transition-colors duration-200">Doctor</Link>
               </p>
             </form>
           ) : (
-            <form onSubmit={handleStepTwo} className="space-y-3">
+            <form onSubmit={handleStepTwo} className="space-y-5">
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Security Question</label>
-                <p className="text-xs bg-gray-100 p-2 rounded">{securityQuestion}</p>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Security Question</label>
+                <div className="bg-gray-50 border border-gray-200 p-4 rounded-lg">
+                  <p className="text-sm text-gray-800 font-medium">{securityQuestion}</p>
+                </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Your Answer</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Your Answer</label>
                 <input
                   type="text"
-                  className="w-full border border-gray-300 rounded px-2 py-1 text-xs"
+                  className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
                   placeholder="Enter your answer"
                   value={securityAnswer}
                   onChange={(e) => setSecurityAnswer(e.target.value)}
@@ -325,11 +327,11 @@ function Login() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className={`w-full bg-blue-800 text-white py-1.5 rounded hover:bg-blue-900 transition flex justify-center items-center ${isLoading ? 'opacity-75' : ''}`}
+                className={`w-full bg-gradient-to-r from-blue-700 to-blue-800 text-white py-3 rounded-lg font-semibold hover:from-blue-800 hover:to-blue-900 transition-all duration-200 flex justify-center items-center shadow-lg hover:shadow-xl transform hover:scale-105 ${isLoading ? 'opacity-75 cursor-not-allowed' : ''}`}
               >
                 {isLoading ? (
                   <>
-                    <svg className="animate-spin -ml-1 mr-2 h-3 w-3 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
@@ -341,7 +343,7 @@ function Login() {
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="w-full text-blue-600 text-xs hover:underline mt-2"
+                className="w-full text-blue-600 font-medium text-sm hover:text-blue-800 hover:underline mt-4 transition-colors duration-200"
               >
                 ← Back to email/password
               </button>
