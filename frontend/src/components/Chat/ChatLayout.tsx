@@ -3,8 +3,13 @@ import { decodeToken } from '../../utils/decodeToken';
 import AppointmentList from './AppointmentList';
 import ChatBox from './ChatBox';
 import ChatHeader from './ChatHeader';
-import Sidebar from '../Patient/LeftSidebar';
-import TopNavBar from '../Patient/TopNavbar';
+
+import PatientSidebar from '../Patient/LeftSidebar';
+import PatientTopNavBar from '../Patient/TopNavbar';
+
+import DoctorSidebar from '../Doctor/DoctorSidebar';
+import DoctorTopNavBar from '../Doctor/TopNavbar';
+
 import type { AppointmentType, MessageType } from './types';
 
 const ChatLayout = () => {
@@ -73,6 +78,10 @@ const ChatLayout = () => {
       </div>
     );
   }
+
+  // Choose sidebar and navbar based on role
+  const Sidebar = role === 'doctor' ? DoctorSidebar : PatientSidebar;
+  const TopNavBar = role === 'doctor' ? DoctorTopNavBar : PatientTopNavBar;
 
   return (
     <div className="flex h-screen overflow-hidden">
