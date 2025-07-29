@@ -64,14 +64,28 @@ const DoctorProfile: React.FC = () => {
       navigate("/patient-calendar");
     } catch (err) {
       if (axios.isAxiosError(err)) {
-        console.error("Booking failed:", err.response?.data || err.message);
-        toast.error(
-          (err.response?.data as { message?: string })?.message || "Booking failed"
-        );
-      } else {
-        console.error("Unexpected error:", err);
-        toast.error("Unexpected error while booking appointment");
-      }
+  console.error("Booking failed:", err.response?.data || err.message);
+
+  const serverMessage = err.response?.data?.message || "";
+
+  let userMessage = "Booking failed";
+
+  if (serverMessage.includes("already booked")) {
+    userMessage = "Booking failed: This slot is not available";
+  } else if (serverMessage.includes("Scheduled date must be in the future")) {
+    userMessage = "Booking failed: Please select a future date";
+  } else if (serverMessage.includes("Only patients can book")) {
+    userMessage = "Booking failed: Unauthorized action";
+  } else if (serverMessage.includes("Validation error")) {
+    userMessage = "Booking failed: Please complete all required fields";
+  }
+
+  toast.error(userMessage);
+} else {
+  console.error("Unexpected error:", err);
+  toast.error("Unexpected error while booking appointment");
+}
+
     }
   };
 

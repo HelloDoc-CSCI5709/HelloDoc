@@ -9,7 +9,8 @@ import axios from "axios";
 import TopNavbar from "../components/Doctor/TopNavbar";
 import DoctorSidebar from "../components/Doctor/DoctorSidebar";
 
-const BASE_URL = import.meta.env.VITE_API_BASE;
+
+const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL;
 
 interface Appointment {
   _id: string;
@@ -35,7 +36,7 @@ const DoctorCalendar: React.FC = () => {
       if (!token) return;
 
       try {
-        // Decode JWT to get doctorId
+        // Decode token to get doctor ID
         const decoded = JSON.parse(atob(token.split(".")[1]));
         const loggedInDoctorId =
           decoded.id || decoded._id || decoded.userId || decoded.user?.id || "";
@@ -48,7 +49,7 @@ const DoctorCalendar: React.FC = () => {
           },
         });
 
-        setAppointments(res.data.body);
+        setAppointments(res.data.body || []);
       } catch (err) {
         console.error("Failed to fetch doctor appointments", err);
       }
@@ -102,8 +103,8 @@ const DoctorCalendar: React.FC = () => {
         </div>
 
         {/* Calendar Content */}
-        <div className="p-6 overflow-y-auto">
-          <div className="bg-white rounded-xl shadow-sm p-4">
+        <div className="p-6 overflow-y-auto min-h-[600px]">
+          <div className="bg-white rounded-xl shadow-sm p-4 min-h-[500px]">
             <FullCalendar
               plugins={[timeGridPlugin, interactionPlugin, dayGridPlugin]}
               initialView="timeGridWeek"
@@ -117,19 +118,28 @@ const DoctorCalendar: React.FC = () => {
               }}
               height="auto"
               dayMaxEvents={true}
-              eventContent={(arg) => (
-                <div className="cursor-pointer">
-                  <div className="text-white text-sm font-medium px-2">
-                    {arg.event.extendedProps.patientName}
+              eventContent={(arg) => {
+                const { patientName, appointmentType, joinLink } = arg.event.extendedProps;
+                return (
+                  <div className="cursor-pointer">
+                    <div className="text-white text-sm font-medium px-2">
+                      {patientName}
+                    </div>
+                    <div className="text-white text-xs px-2 opacity-90">
+                      {appointmentType}
+                    </div>
+                    <button
+                      className="mt-1 text-xs px-2 py-0.5 rounded bg-black text-white shadow hover:scale-105"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.location.href = joinLink;
+                      }}
+                    >
+                      Join Now
+                    </button>
                   </div>
-                  <div className="text-white text-xs px-2 opacity-90">
-                    {arg.event.extendedProps.appointmentType}
-                  </div>
-                  <button className="mt-1 text-xs px-2 py-0.5 rounded bg-black text-white shadow hover:scale-105">
-                    Join Now
-                  </button>
-                </div>
-              )}
+                );
+              }}
               dayCellDidMount={(info) => {
                 info.el.style.cursor = "pointer";
               }}
