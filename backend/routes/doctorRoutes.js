@@ -5,34 +5,51 @@ const {
   getDoctorProfile,
   updateBasicDoctorProfile,
   updateAvailability,
+  uploadAvailabilityFromIcs,
   updateDoctorAddress,
   getAvailability,
   uploadProfilePicture,
   getPublicDoctorProfile,
   listDoctors,
+  geocodeLocation,
   submitDoctorCredential,
   getDoctorCredentials,
   approveDoctorCredential,
   rejectDoctorCredential,
   getDoctorCredentialById,
-  getPatientProfileForDoctor
+  getDoctorPatients
 } = require('../controllers/doctorController');
-const { uploadCredential, uploadProfilePicture: uploadProfilePictureMiddleware } = require('../middleware/upload/doctorDocs');
+const { 
+  uploadCredential, 
+  uploadProfilePicture: uploadProfilePictureMiddleware,
+  uploadIcsFile
+} = require('../middleware/upload/doctorDocs');
 
 const router = Router();
+
+router.get('/public/:doctorId', getPublicDoctorProfile);
 router.get('/list/all', listDoctors);
+router.get('/geocode', geocodeLocation);
+
 router.use(verifyToken);
 
 router.get('/profile', authorizeRoles('doctor', 'admin'), getDoctorProfile);
 router.put('/profile/basic', authorizeRoles('doctor', 'admin'), updateBasicDoctorProfile);
+
+
 router.put('/profile/availability', authorizeRoles('doctor', 'admin'), updateAvailability);
+router.get('/availability', authorizeRoles('doctor', 'admin'), getAvailability);
+
+router.post(
+  '/availability/upload-ics',
+  authorizeRoles('doctor'),
+  uploadIcsFile.single('icsFile'),
+  uploadAvailabilityFromIcs
+);
+
 router.put('/profile/address', authorizeRoles('doctor', 'admin'), updateDoctorAddress);
-router.get('/availability', authorizeRoles('patient','doctor', 'admin'), getAvailability);
-
 router.post('/profile-picture', authorizeRoles('doctor'), uploadProfilePictureMiddleware.single('image'), uploadProfilePicture);
-
-router.get('/public/:doctorId', getPublicDoctorProfile);
-
+router.get('/patients', authorizeRoles('doctor'), getDoctorPatients);
 
 router.post(
   '/:doctorId/credentials',
@@ -45,5 +62,5 @@ router.get('/:doctorId/credentials', authorizeRoles('doctor'), getDoctorCredenti
 router.put('/:doctorId/credentials/:credentialId/approve', authorizeRoles('admin'), approveDoctorCredential);
 router.put('/:doctorId/credentials/:credentialId/reject', authorizeRoles('admin'), rejectDoctorCredential);
 router.get('/:doctorId/credentials/:credentialId', authorizeRoles('doctor', 'admin'), getDoctorCredentialById);
-router.get('/view-profile/:patientId', authorizeRoles('doctor', 'admin'), getPatientProfileForDoctor);
+
 module.exports = router;
