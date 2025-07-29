@@ -49,7 +49,7 @@ const PatientCalendar: React.FC = () => {
     start: appt.scheduledFor,
     color: "#3b82f6",
     extendedProps: {
-      joinLink: `/join/${appt._id}`,
+      joinLink: `/video/${appt._id}`,
       doctorName: appt.doctorId.fullName,
     },
   }));

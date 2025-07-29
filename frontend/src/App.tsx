@@ -1,4 +1,4 @@
-// src/App.tsx
+import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Login from './pages/Login'
 import PatientRegister from './pages/PatientRegister'
@@ -16,6 +16,8 @@ import ResetPassword from './pages/ResetPassword'
 import VerifyEmail from './pages/VerifyEmail'
 import PatientCalendar from './pages/PatientCalendar'
 import DoctorCalendar from './pages/DoctorCalendar'
+import PreJoinVideo from './pages/PreJoinVideo'
+import VideoCallPage from './pages/VideoCallPage'
 import BookAppointment from './pages/AppointmentBooking'
 //import AdminDashboard from './pages/AdminDashboard'
 
@@ -26,33 +28,36 @@ function App() {
   return (
     <div data-testid="app-container">
       
-    <Router>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/patientregister" element={<PatientRegister />} />
-        <Route path="/doctorregister" element={<DoctorRegister />} />
-        <Route path="/book-appointment" element={<AppointmentBooking />} />
-        <Route path="/select-doctor" element={<DoctorSelection />} />
-        <Route path="/doctor-profile" element={<DoctorProfile />} />
-        <Route path="/patient-profile" element={<PatientProfile />} />
-        <Route path="/patient-dashboard" element={<PatientDashboard />} />
-        <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
-        <Route path="/patient-calendar" element={<PatientCalendar />} />
-        <Route path="/doctor-calendar" element={<DoctorCalendar />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/verify-otp" element={<VerifyOtpPage />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/verify-email" element={<VerifyEmail />} />
-        {/* In your main router file (App.tsx or Routes.tsx) */}
-        <Route path="/patient/book-appointment" element={<BookAppointment />} />
-        {/*<Route path="/patient/appointments" element={<AppointmentsList />} />*/}
-        {/*<Route path="/admin-dashboard" element={<AdminDashboard />} />*/}
+      <Router>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/patientregister" element={<PatientRegister />} />
+          <Route path="/doctorregister" element={<DoctorRegister />} />
+          <Route path="/book-appointment" element={<AppointmentBooking />} />
+          <Route path="/select-doctor" element={<DoctorSelection />} />
+          <Route path="/doctor-profile" element={<DoctorProfile />} />
+          <Route path="/patient-profile" element={<PatientProfile />} />
+          <Route path="/patient-dashboard" element={<PatientDashboard />} />
+          <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
+          <Route path="/patient-calendar" element={<PatientCalendar />} />
+          <Route path="/doctor-calendar" element={<DoctorCalendar />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/verify-otp" element={<VerifyOtpPage />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/patient/book-appointment" element={<BookAppointment />} />
+          {/*<Route path="/patient/appointments" element={<AppointmentsList />} />*/}
+          {/*<Route path="/admin-dashboard" element={<AdminDashboard />} />*/}
+          <Route path="/chat" element={<ChatPage />} /> 
+          <Route path="/video/:appointmentId" element={<PreJoinVideo />} />
+          <Route
+            path="/video/:appointmentId/room/:roomId"
+            element={<VideoCallPage />}
+          />
 
-        <Route path="/chat" element={<ChatPage />} /> 
-
-        <Route path="*" element={<Home/>} /> 
-      </Routes>
-    </Router>
+          <Route path="*" element={<Home />} />
+        </Routes>
+      </Router>
     </div>
   )
 }

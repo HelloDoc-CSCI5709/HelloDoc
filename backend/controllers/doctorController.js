@@ -3,9 +3,14 @@ const User = require('../models/User');
 const DoctorAvailability = require('../models/DoctorAvailability');
 const DoctorCredential = require('../models/DoctorCredential');
 const { responseBody } = require('../config/responseBody');
+const PatientProfile = require('../models/PatientProfile');
+const HAndPRecord = require('../models/PatientHAndPRecord');
+const PatientDocument = require('../models/PatientDocument');
+const HealthRecord = require('../models/HealthRecord');
 const mongoose = require('mongoose');
 const path = require('path');
 const fs = require('fs');
+const BASE_URL = process.env.BASE_URL;
 const {ALLOWED_SPECIALIZATIONS , FILE_CONFIG, PAGINATION_LIMITS } = require("../config/Constants")
 
 
@@ -792,6 +797,48 @@ const getDoctorCredentialById = handleAsync(async (req, res) => {
   }));
 });
 
+
+const getPatientProfileForDoctor = async (req, res) => {
+  try {
+    const { patientId } = req.params;
+
+    const user = await User.findById(patientId).select('fullName email role emailVerified createdAt');
+    if (!user || user.role !== 'patient') {
+      return res.status(404).json(responseBody(404, 'Patient user not found', null));
+    }
+
+    const profile = await PatientProfile.findOne({ userId: patientId });
+
+    const healthRecord = await HAndPRecord.findOne({ patientId }).populate('doctorNotes.doctorId', 'fullName email');
+
+    const patientDocs = await PatientDocument.find({ userId: patientId });
+    const patientDocumentLinks = {};
+    patientDocs.forEach(doc => {
+      patientDocumentLinks[doc.docType] = `${BASE_URL}/uploads/patient/${doc.fileName}`;
+    });
+
+    const healthDocs = await HealthRecord.find({ patientId });
+    const healthRecordLinks = {};
+    healthDocs.forEach(doc => {
+      healthRecordLinks[doc.documentType] = `${BASE_URL}/uploads/health-records/${doc.fileName}`;
+    });
+
+    return res.status(200).json(
+      responseBody(200, 'Patient profile fetched for doctor', {
+        profile,
+        healthRecord,
+        documents: {
+          patientDocuments: patientDocumentLinks,
+          healthRecords: healthRecordLinks
+        }
+      })
+    );
+  } catch (err) {
+    console.error('Get Patient Profile for Doctor error:', err);
+    return res.status(500).json(responseBody(500, 'Internal Server error', null));
+  }
+};
+
 module.exports = {
   getDoctorProfile,
   updateBasicDoctorProfile,
@@ -805,5 +852,5 @@ module.exports = {
   getDoctorCredentials,
   approveDoctorCredential,
   rejectDoctorCredential,
-  getDoctorCredentialById
+  getDoctorCredentialById,getPatientProfileForDoctor
 };

@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const { validate } = require('./RefreshTokens');
 
 const appointmentSchema = new mongoose.Schema({
   patientId: {
