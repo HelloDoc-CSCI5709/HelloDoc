@@ -63,11 +63,15 @@ const DoctorProfile: React.FC = () => {
       toast.success("Appointment booked successfully!");
       navigate("/patient-calendar");
     } catch (err) {
-      const error = err as AxiosError;
-      console.error("Booking failed:", error.response?.data || error.message);
-      toast.error(
-        (error.response?.data as any)?.message || "Booking failed"
-      );
+      if (axios.isAxiosError(err)) {
+        console.error("Booking failed:", err.response?.data || err.message);
+        toast.error(
+          (err.response?.data as { message?: string })?.message || "Booking failed"
+        );
+      } else {
+        console.error("Unexpected error:", err);
+        toast.error("Unexpected error while booking appointment");
+      }
     }
   };
 
