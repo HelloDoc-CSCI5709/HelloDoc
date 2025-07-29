@@ -557,54 +557,59 @@ const getPublicDoctorProfile = handleAsync(async (req, res) => {
 
 const listDoctors = handleAsync(async (req, res) => {
   const { specialization, lng, lat, radius = '5000', page = '1', limit = '10' } = req.query;
-  
+
   const errors = [];
-  
+
   if (specialization && !ALLOWED_SPECIALIZATIONS.includes(specialization)) {
     errors.push('specialization is invalid');
   }
-  
+
   if ((lng && !lat) || (!lng && lat)) {
     errors.push('Both lng and lat must be provided together');
   }
-  
+
+  let useGeo = false;
   if (lng && lat) {
+    useGeo = true;
     const longitude = parseFloat(lng);
     const latitude = parseFloat(lat);
-    
+
     if (isNaN(longitude) || longitude < -180 || longitude > 180) {
       errors.push('lng must be a number between -180 and 180');
     }
-    
+
     if (isNaN(latitude) || latitude < -90 || latitude > 90) {
       errors.push('lat must be a number between -90 and 90');
     }
   }
-  
+
   const radiusNum = parseInt(radius);
   if (isNaN(radiusNum) || radiusNum <= 0 || radiusNum > PAGINATION_LIMITS.MAX_RADIUS) {
     errors.push(`radius must be a positive number up to ${PAGINATION_LIMITS.MAX_RADIUS}`);
   }
-  
+
   const { errors: paginationErrors, pageNum, limitNum } = validatePagination(page, limit);
   errors.push(...paginationErrors);
-  
+
   if (errors.length > 0) {
     return res.status(400).json(responseBody(400, 'Validation error', errors));
   }
-  
+
   const filter = buildDoctorFilter(specialization, lng, lat, radius);
   const skip = (pageNum - 1) * limitNum;
-  
+
+  // Only apply `location: { $ne: null }` if geospatial filtering is used
+  const locationFilter = useGeo ? { location: { $ne: null } } : {};
+
   const [doctors, total] = await Promise.all([
-    Doctor.find({ ...filter, location: { $ne: null } })
+    Doctor.find({ ...filter, ...locationFilter })
       .populate('doctorId', 'fullName')
-      .select('fullName specialization bio location education')
+      .select('doctorId specialization bio location education')
       .skip(skip)
       .limit(limitNum),
-    Doctor.countDocuments({ ...filter, location: { $ne: null } })
+    Doctor.countDocuments({ ...filter, ...locationFilter })
   ]);
-  
+
   return res.status(200).json(responseBody(200, 'Doctors retrieved successfully', {
     doctors,
     pagination: {

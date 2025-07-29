@@ -3,7 +3,10 @@ import TopNavBar from "../components/Patient/TopNavbar";
 import SideBar from "../components/Patient/LeftSidebar";
 import { useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
+import axios from "axios";
+import { toast } from "react-toastify";
 import "react-datepicker/dist/react-datepicker.css";
+import { BASE_URL } from "../constant_url";
 
 const DoctorProfile: React.FC = () => {
   const navigate = useNavigate();
@@ -14,9 +17,56 @@ const DoctorProfile: React.FC = () => {
 
   const timeSlots = [
     "09:00 AM", "09:30 AM", "10:00 AM", "10:30 AM",
-    "12:00 PM", "12:30 PM", 
-    
+    "12:00 PM", "12:30 PM",
   ];
+
+  const handleBookAppointment = async () => {
+    if (!selectedDate || !selectedTime) {
+      toast.error("Please select a valid date and time");
+      return;
+    }
+
+    const reason = localStorage.getItem("appointmentReason");
+    const token = localStorage.getItem("accessToken");
+
+    if (!reason) {
+      toast.error("Missing reason for appointment");
+      return;
+    }
+
+    if (!token) {
+      toast.error("Not logged in");
+      return;
+    }
+
+    try {
+      const [time, modifier] = selectedTime.split(" ");
+      let [hours, minutes] = time.split(":").map(Number);
+      if (modifier === "PM" && hours < 12) hours += 12;
+      if (modifier === "AM" && hours === 12) hours = 0;
+
+      const combinedDateTime = new Date(selectedDate);
+      combinedDateTime.setHours(hours, minutes, 0, 0);
+
+      const payload = {
+        doctorId: doctor.doctorId,
+        scheduledFor: combinedDateTime.toISOString(),
+        reason,
+      };
+
+      const res = await axios.post(`${BASE_URL}/api/appointments/book`, payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      toast.success("Appointment booked successfully!");
+      navigate("/patient-calendar");
+    } catch (err: any) {
+      console.error("❌ Booking failed:", err.response?.data || err.message);
+      toast.error(err.response?.data?.message || "Booking failed");
+    }
+  };
 
   if (!doctor?.name) {
     return (
@@ -52,82 +102,54 @@ const DoctorProfile: React.FC = () => {
 
         <main className="flex-1 overflow-y-auto p-4 md:p-8">
           <div className="max-w-6xl mx-auto">
-            {/* Header Info */}
-            <div className="flex items-start gap-6 mb-6">
-              <img
-                src={doctor.image}
-                alt="Doctor Avatar"
-                className="w-20 h-20 rounded-full object-cover"
-              />
-              <div>
-                <h1 className="text-2xl font-bold mb-1">{doctor.name}</h1>
-                <p className="text-gray-600">{doctor.specialty}</p>
-                <p className="text-sm text-gray-400">
-                  {doctor.clinic}<br />{doctor.experience}
-                </p>
+            {/* Doctor Info */}
+            <div className="bg-white rounded-2xl shadow-sm border p-6 mb-6">
+              <div className="flex items-start gap-6">
+                <img
+                  src={doctor.image}
+                  alt="Doctor Avatar"
+                  className="w-24 h-24 rounded-full object-cover border-4 border-gray-100"
+                />
+                <div className="flex-1">
+                  <h1 className="text-3xl font-bold text-gray-900 mb-2">{doctor.name}</h1>
+                  <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium inline-block mb-2">
+                    {doctor.specialty}
+                  </div>
+                  <p className="text-gray-600">{doctor.clinic}</p>
+                  <p className="text-gray-600">{doctor.experience}</p>
+                </div>
               </div>
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-              <div className="border rounded-xl text-center p-4">
-                <p className="text-blue-500 font-bold text-2xl">1000+</p>
-                <p className="text-sm">Patients</p>
-              </div>
-              <div className="border rounded-xl text-center p-4">
-                <p className="text-pink-500 font-bold text-2xl">10 Yrs</p>
-                <p className="text-sm">Experience</p>
-              </div>
-              <div className="border rounded-xl text-center p-4">
-                <p className="text-yellow-500 font-bold text-2xl">{doctor.rating}</p>
-                <p className="text-sm">Ratings</p>
-              </div>
-            </div>
-
-            {/* About Doctor */}
-            <div className="mb-6">
-              <h3 className="text-md font-semibold mb-1">About Doctor</h3>
-              <p className="text-sm text-gray-600">
-                Dr. {doctor.name.split(" ")[1]} is a highly respected specialist at {doctor.clinic}. Renowned for their dedication and service excellence.
-              </p>
-            </div>
-
-            {/* Calendar + Time Slots */}
-            <div className="mb-6">
-              <h3 className="text-md font-semibold mb-3">Schedule Appointment</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Date Picker */}
+            {/* Schedule Form */}
+            <div className="bg-white rounded-2xl shadow-sm border p-6 mb-6">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">Schedule Appointment</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Select Date</label>
+                  <label className="block text-sm font-semibold mb-2">Select Date</label>
                   <DatePicker
                     selected={selectedDate}
                     onChange={(date) => setSelectedDate(date)}
-                    className="border px-3 py-2 rounded w-full text-sm focus:outline-blue-500"
                     minDate={new Date()}
+                    className="w-full px-4 py-3 border rounded-md border-gray-300"
                     dateFormat="dd/MM/yyyy"
-                    dayClassName={(date) =>
-                      date.toDateString() === selectedDate?.toDateString()
-                        ? "custom-selected-day"
-                        : ""
-                    }
                   />
                 </div>
 
-                {/* Time Slots */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">Available Time</label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {timeSlots.map((time) => (
+                  <label className="block text-sm font-semibold mb-2">Available Time</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {timeSlots.map((slot) => (
                       <button
-                        key={time}
-                        onClick={() => setSelectedTime(time)}
-                        className={`py-2 px-3 rounded text-sm border transition-all ${
-                          selectedTime === time
-                            ? "bg-blue-600 text-white"
-                            : "bg-white text-gray-800 border-gray-300 hover:bg-blue-50"
+                        key={slot}
+                        onClick={() => setSelectedTime(slot)}
+                        className={`py-2 px-4 rounded-md border font-medium text-sm ${
+                          selectedTime === slot
+                            ? "bg-blue-600 text-white border-blue-600"
+                            : "bg-white text-gray-700 border-gray-300 hover:bg-blue-50"
                         }`}
                       >
-                        {time}
+                        {slot}
                       </button>
                     ))}
                   </div>
@@ -136,10 +158,10 @@ const DoctorProfile: React.FC = () => {
             </div>
 
             {/* Book Button */}
-            <div className="mt-8 text-center">
+            <div className="text-center mt-6">
               <button
-                className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                onClick={() => navigate("/confirm-booking")}
+                onClick={handleBookAppointment}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-all"
               >
                 Book Appointment
               </button>
