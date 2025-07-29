@@ -12,7 +12,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 const navItems = [
   { label: 'Dashboard', icon: <LayoutGrid />, to: '/doctor-dashboard' },
   { label: 'Calendar', icon: <Calendar />, to: '/doctor-calendar' },
-  { label: 'Chat', icon: <MessageCircle />, to: '/consultations' },
+  { label: 'Chat', icon: <MessageCircle />, to: '/chat' },
   { label: 'Health Record', icon: <FileText />, to: '/health-record' }, 
   { label: 'Settings', icon: <Settings />, to: '/doctor-profile' },
 ];

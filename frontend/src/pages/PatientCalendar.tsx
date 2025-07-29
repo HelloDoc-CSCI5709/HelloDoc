@@ -6,16 +6,17 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import type { EventClickArg } from "@fullcalendar/core";
 import axios from "axios";
 
+
 import TopNavbar from "../components/Patient/TopNavbar";
 import LeftSidebar from "../components/Patient/LeftSidebar";
 
-const BASE_URL = import.meta.env.VITE_API_BASE;
+const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL;
 
 interface Appointment {
   _id: string;
   scheduledFor: string;
   doctorId: {
-    fullName: string;
+    fullName?: string;
     _id: string;
   };
 }
@@ -34,7 +35,7 @@ const PatientCalendar: React.FC = () => {
             Authorization: `Bearer ${token}`,
           },
         });
-        setAppointments(res.data.body);
+        setAppointments(res.data.body || []);
       } catch (err) {
         console.error("Failed to fetch appointments", err);
       }
@@ -45,12 +46,12 @@ const PatientCalendar: React.FC = () => {
 
   const events = appointments.map((appt) => ({
     id: appt._id,
-    title: `Appointment with ${appt.doctorId.fullName}`,
+    title: `Appointment with ${appt.doctorId?.fullName || "Doctor"}`,
     start: appt.scheduledFor,
     color: "#3b82f6",
     extendedProps: {
       joinLink: `/video/${appt._id}`,
-      doctorName: appt.doctorId.fullName,
+      doctorName: appt.doctorId?.fullName || "Doctor",
     },
   }));
 
@@ -86,7 +87,7 @@ const PatientCalendar: React.FC = () => {
 
         {/* Calendar Content */}
         <div className="p-6 overflow-y-auto">
-          <div className="bg-white rounded-xl shadow-sm p-4">
+          <div className="bg-white rounded-xl shadow-sm p-4 min-h-[600px]">
             <FullCalendar
               plugins={[timeGridPlugin, interactionPlugin, dayGridPlugin]}
               initialView="timeGridWeek"
@@ -105,7 +106,14 @@ const PatientCalendar: React.FC = () => {
                   <div className="text-white text-sm font-medium px-2">
                     {arg.event.title}
                   </div>
-                  <button className="mt-1 text-xs px-2 py-0.5 rounded bg-black text-white shadow hover:scale-105">
+                  <button
+                    className="mt-1 text-xs px-2 py-0.5 rounded bg-black text-white shadow hover:scale-105"
+                    onClick={(e) => {
+                      e.stopPropagation(); // prevent full event click
+                      const link = arg.event.extendedProps.joinLink;
+                      if (link) window.location.href = link;
+                    }}
+                  >
                     Join Now
                   </button>
                 </div>

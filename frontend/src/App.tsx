@@ -19,6 +19,9 @@ import DoctorCalendar from './pages/DoctorCalendar'
 import PreJoinVideo from './pages/PreJoinVideo'
 import VideoCallPage from './pages/VideoCallPage'
 import BookAppointment from './pages/AppointmentBooking'
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 //import AdminDashboard from './pages/AdminDashboard'
 
 import ChatPage from './pages/ChatPage'
@@ -27,7 +30,7 @@ import ChatPage from './pages/ChatPage'
 function App() {
   return (
     <div data-testid="app-container">
-      
+      <ToastContainer position="top-right" autoClose={4000} hideProgressBar />
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
