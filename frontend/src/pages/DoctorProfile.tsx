@@ -3,7 +3,7 @@ import TopNavBar from "../components/Patient/TopNavbar";
 import SideBar from "../components/Patient/LeftSidebar";
 import { useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import { toast } from "react-toastify";
 import "react-datepicker/dist/react-datepicker.css";
 import { BASE_URL } from "../constant_url";
