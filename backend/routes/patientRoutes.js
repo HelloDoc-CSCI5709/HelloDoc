@@ -1,7 +1,7 @@
 const express = require('express');
 const { verifyToken, verifyPendingToken } = require('../middleware/authmiddleware/Jwt');
 const { authorizeRoles } = require('../middleware/rolemiddleware/role');
-const { getPatientProfile, updatePatientProfile } = require('../controllers/patientController');
+const { getPatientProfile, updatePatientProfile, getPatientProfileForDoctor } = require('../controllers/patientController');
 const upload = require('../middleware/upload/patientDocs');
 
 const {
@@ -24,6 +24,7 @@ const router = express.Router();
 
 router.get('/profile', verifyToken, authorizeRoles('patient'), getPatientProfile);
 router.put('/profile', verifyToken, authorizeRoles('patient'), updatePatientProfile);
+router.get('/patient/profile', verifyToken, authorizeRoles('doctor'), getPatientProfileForDoctor);
 
 router.post(
   '/upload/healthcard/front',

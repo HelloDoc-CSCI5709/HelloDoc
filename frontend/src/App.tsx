@@ -20,7 +20,9 @@ import PreJoinVideo from './pages/PreJoinVideo'
 import VideoCallPage from './pages/VideoCallPage'
 import BookAppointment from './pages/AppointmentBooking'
 import { ToastContainer } from "react-toastify";
+import DoctorProfilePage from './pages/DoctorProfilePage';
 import "react-toastify/dist/ReactToastify.css";
+
 
 
 
@@ -40,7 +42,7 @@ function App() {
           <Route path="/doctorregister" element={<DoctorRegister />} />
           <Route path="/book-appointment" element={<AppointmentBooking />} />
           <Route path="/select-doctor" element={<DoctorSelection />} />
-          <Route path="/doctor-profile" element={<DoctorProfile />} />
+          {/* <Route path="/doctor-profile" element={<DoctorProfile />} /> */}
           <Route path="/patient-profile" element={<PatientProfile />} />
           <Route path="/patient-dashboard" element={<PatientDashboard />} />
           <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
@@ -55,6 +57,7 @@ function App() {
           {/*<Route path="/admin-dashboard" element={<AdminDashboard />} />*/}
           <Route path="/chat" element={<ChatPage />} /> 
           <Route path="/video/:appointmentId" element={<PreJoinVideo />} />
+          <Route path="/doctor-profile" element={<DoctorProfilePage />} />
         
           <Route
             path="/video/:appointmentId/room/:roomId"
