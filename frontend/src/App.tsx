@@ -21,11 +21,6 @@ import VideoCallPage from './pages/VideoCallPage'
 import BookAppointment from './pages/AppointmentBooking'
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
-
-
-//import AdminDashboard from './pages/AdminDashboard'
-
 import ChatPage from './pages/ChatPage'
 
 
