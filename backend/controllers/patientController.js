@@ -24,7 +24,7 @@ const getPatientProfile = async (req, res) => {
     const patientDocumentLinks = {};
     patientDocs.forEach(doc => {
       if (doc.docType) {
-        patientDocumentLinks[doc.docType] = `${BASE_URL}/uploads/patient/${doc.fileName}`;
+        patientDocumentLinks[doc.docType] = `https://hellodoc-prod.onrender.com/uploads/patient/${doc.fileName}`;
       }
     });
 
@@ -32,7 +32,7 @@ const getPatientProfile = async (req, res) => {
     const healthRecordLinks = {};
     healthDocs.forEach(doc => {
       const key = doc.documentType || `record-${doc._id}`;
-      healthRecordLinks[key] = `${BASE_URL}/uploads/health-records/${doc.fileName}`;
+      healthRecordLinks[key] = `https://hellodoc-prod.onrender.com/uploads/health-records/${doc.fileName}`;
     });
 
     return res.status(200).json(
@@ -67,13 +67,13 @@ const getPatientProfileForDoctor = async (req, res) => {
     const patientDocs = await PatientDocument.find({ userId: patientId });
     const patientDocumentLinks = {};
     patientDocs.forEach(doc => {
-      patientDocumentLinks[doc.docType] = `${BASE_URL}/uploads/patient/${doc.fileName}`;
+      patientDocumentLinks[doc.docType] = `https://hellodoc-prod.onrender.com/uploads/patient/${doc.fileName}`;
     });
 
     const healthDocs = await HealthRecord.find({ patientId });
     const healthRecordLinks = {};
     healthDocs.forEach(doc => {
-      healthRecordLinks[doc.documentType] = `${BASE_URL}/uploads/health-records/${doc.fileName}`;
+      healthRecordLinks[doc.documentType] = `https://hellodoc-prod.onrender.com/uploads/health-records/${doc.fileName}`;
     });
 
     return res.status(200).json(
