@@ -7,7 +7,7 @@ import { getAppointments } from '../redux/actions/appointmentActions';
 import { selectCurrentUser } from '../redux/selectors/userSelectors';
 import { selectAppointments, selectAppointmentLoading } from '../redux/selectors/appointmentSelectors';
 import { format, isToday, isTomorrow, isThisWeek, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isSameMonth } from 'date-fns';
-
+import { useNavigate } from 'react-router-dom';
 interface QuickStat {
   title: string;
   value: string;
@@ -25,6 +25,8 @@ const PatientDashboard: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const navigate = useNavigate();
+  
 
   useEffect(() => {
     if (user?.id) {
@@ -235,10 +237,13 @@ const PatientDashboard: React.FC = () => {
                       </div>
                       <h2 className="text-xl font-bold text-gray-800">Upcoming Appointments</h2>
                     </div>
-                    <button className="text-blue-600 text-sm hover:underline flex items-center space-x-1 bg-blue-50 px-3 py-1 rounded-full">
-                      <span>View All</span>
-                      <ChevronRight className="w-4 h-4" />
-                    </button>
+<button
+  onClick={() => navigate('/appointments')}
+  className="text-blue-600 text-sm hover:underline flex items-center space-x-1 bg-blue-50 px-3 py-1 rounded-full"
+>
+  <span>View All</span>
+  <ChevronRight className="w-4 h-4" />
+</button>
                   </div>
                 </div>
                 <div className="p-4 md:p-6">
