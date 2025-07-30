@@ -1,0 +1,51 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "This is the backend for HelloDoc. We are using Express, Node, and Mongoose with MongoDB for this project's backend",
+  "homepage": "https://github.com/akshat799/HelloDoc#readme",
+  "bugs": {
+    "url": "https://github.com/akshat799/HelloDoc/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/akshat799/HelloDoc.git"
+  },
+  "license": "ISC",
+  "author": "Akshat Gulati",
+  "main": "server.js",
+  "scripts": {
+    "test": "jest",
+    "start": "node server.js",
+    "start:dev": "nodemon --legacy-watch server.js"
+  },
+  "dependencies": {
+    "axios": "^1.11.0",
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.2",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0",
+    "express-mongo-sanitize": "^2.2.0",
+    "helmet": "^8.1.0",
+    "http": "^0.0.1-security",
+    "ics": "^3.8.1",
+    "jsonwebtoken": "^9.0.2",
+    "mailer": "^0.6.6",
+    "mongoose": "^8.15.2",
+    "multer": "^2.0.1",
+    "nodemailer": "^7.0.5",
+    "nodemon": "^3.1.10",
+    "socket.io": "^4.8.1",
+    "xss-clean": "^0.1.4"
+  },
+  "directories": {
+    "test": "tests"
+  },
+  "keywords": [],
+  "type": "commonjs",
+  "devDependencies": {
+    "jest": "^30.0.2",
+    "supertest": "^7.1.1"
+  }
+}

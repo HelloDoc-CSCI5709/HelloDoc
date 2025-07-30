@@ -1,0 +1,45 @@
+name: Develop Branch Pipeline
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      mongo:
+        image: mongo:6
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd="mongosh --eval 'db.adminCommand({ ping: 1 })'"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      MONGODB_URI: ${{vars.MONGODB_URI_TEST}}
+      JWT_SECRET: ${{ secrets.JWT_SECRET_TEST }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Backend tests
+        run: |
+          cd backend
+          npm ci
+          npm test
+
+      - name: Frontend tests and lint
+        run: |
+          cd frontend
+          npm ci
+          npm run lint
+          npm run test
