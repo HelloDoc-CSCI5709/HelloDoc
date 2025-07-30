@@ -1,6 +1,6 @@
 import { createSlice, type PayloadAction, type ActionReducerMapBuilder } from '@reduxjs/toolkit';
 import { createAction } from '@reduxjs/toolkit';
-import type { AddressComponents, Location, ProfilePicture, PracticeDetails, DoctorProfile, PatientProfile, User, Credential, Appointment, VideoLog } from '../actions/adminActions';
+import type { User, Credential, Appointment, VideoLog } from '../actions/adminActions';
 
 export const ADMIN_FETCH_USERS_REQUEST = createAction('ADMIN_FETCH_USERS_REQUEST');
 export const ADMIN_FETCH_USERS_SUCCESS = createAction<{ doctors: User[]; patients: User[] }>('ADMIN_FETCH_USERS_SUCCESS');

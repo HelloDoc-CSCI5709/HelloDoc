@@ -13,7 +13,8 @@ interface ProtectedRouteProps {
 interface TokenPayload {
   exp: number;
   role?: string;
-  [key: string]: any;
+  email?: string;
+  userId?: string
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles }) => {

@@ -13,8 +13,8 @@ import {
   clearAdminError,
   resetAdminSuccessFlags
 } from '../redux/reducers/adminReducer';
-import type { User, Credential, Appointment, VideoLog, DoctorProfile, PatientProfile, AddressComponents, Location, ProfilePicture, PracticeDetails } from '../redux/actions/adminActions';
-import { ADMIN_FETCH_VIDEO_LOGS_SUCCESS } from '../redux/reducers/adminReducer';
+import type { User, Credential, VideoLog, DoctorProfile, PatientProfile } from '../redux/actions/adminActions';
+
 
 const decodeJwt = (token: string) => {
   try {
@@ -265,22 +265,22 @@ const AdminDashboard: React.FC = () => {
 
         {/* Tabs */}
         <nav className="mb-6 border-b border-gray-200">
-          {['users', 'appointments', 'credentials'].map(tab => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab as any)}
-              className={`mr-8 pb-2 ${
-                activeTab === tab
-                  ? 'border-b-2 border-indigo-600 text-indigo-600'
-                  : 'text-gray-600 hover:text-gray-800'
-              } font-medium transition-colors duration-200`}
-            >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}{' '}
-              {tab === 'users' && `(${users.length})`}
-              {tab === 'appointments' && `(${appointments?.length || 0})`}
-              {tab === 'credentials' && `(${credentials?.length || 0})`}
-            </button>
-          ))}
+            {(['users', 'appointments', 'credentials'] as const).map(tab => (
+                <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`mr-8 pb-2 ${
+                    activeTab === tab
+                    ? 'border-b-2 border-indigo-600 text-indigo-600'
+                    : 'text-gray-600 hover:text-gray-800'
+                } font-medium transition-colors duration-200`}
+                >
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}{' '}
+                {tab === 'users' && `(${users.length})`}
+                {tab === 'appointments' && `(${appointments?.length || 0})`}
+                {tab === 'credentials' && `(${credentials?.length || 0})`}
+                </button>
+            ))}
         </nav>
 
         {/* Loading */}

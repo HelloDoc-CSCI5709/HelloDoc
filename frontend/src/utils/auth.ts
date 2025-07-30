@@ -1,6 +1,10 @@
 import { jwtDecode } from 'jwt-decode';
 
-export interface JwtPayload { exp: number; [key: string]: any; }
+export interface JwtPayload {
+  exp: number;
+  userId?: string;
+  role?: string;
+}
 
 export const isTokenExpired = (token: string): boolean => {
   try {
@@ -12,7 +16,11 @@ export const isTokenExpired = (token: string): boolean => {
 };
 
 export const refreshTokens = async (refreshToken: string) => {
-  const res = await fetch(`${process.env.REACT_APP_BASE_URL}/api/auth/refresh-token`, {
+  const baseUrl = import.meta.env.VITE_BACKEND_BASE_URL;
+  if (!baseUrl) {
+    throw new Error('Backend base URL is not defined');
+  }
+  const res = await fetch(`${baseUrl}/api/auth/refresh-token`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ refreshToken }),
