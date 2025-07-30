@@ -1,96 +1,75 @@
 import React, { useEffect, useState } from 'react';
-import { Search, Bell, ChevronDown, TrendingUp, TrendingDown, Thermometer, Stethoscope, HeartPulse } from 'lucide-react';
+import { Search, Bell } from 'lucide-react';
 import DoctorSidebar from '../components/Doctor/DoctorSidebar';
-import { useAppSelector } from '../redux/hooks';
-import { selectCurrentUser } from '../redux/selectors/userSelectors';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isToday } from 'date-fns';
-
-interface Patient {
-  id: string;
-  name: string;
-  time: string;
-  type: string;
-  avatar: string;
-  status: 'scheduled' | 'completed' | 'cancelled';
-}
-
-interface PatientDetail {
-  name: string;
-  age: string;
-  duration: string;
-  symptoms: string[];
-  lastChecked: string;
-  prescription: string;
-  observation: string;
-}
+import AppointmentsList from '../components/Doctor/Dashboard/AppointmentsList';
+import AppointmentCalendar from '../components/Doctor/Dashboard/AppointmentCalendar';
+import DashboardMetrics from '../components/Doctor/Dashboard/DashboardMetrics';
+import { useAppSelector, useAppDispatch } from '../redux/hooks';
+import { 
+  getDashboardStats, 
+  getTodayAppointments, 
+  getUpcomingAppointments,
+  getPatientProfile 
+} from '../redux/actions/dashboardActions';
+import { getDoctorProfile } from '../redux/actions/doctorActions';
 
 const DoctorDashboard: React.FC = () => {
-  const currentUser = useAppSelector(selectCurrentUser);
+  const dispatch = useAppDispatch();
+  const { profile } = useAppSelector(state => state.doctor);
+  const { stats, todayAppointments, upcomingAppointments, loading } = useAppSelector(state => state.dashboard);
+  
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [selectedPatient, setSelectedPatient] = useState<PatientDetail | null>(null);
-  const [currentMonth] = useState(new Date());
+
+  // Load data on component mount
+  useEffect(() => {
+    // Load doctor profile if not available
+    if (!profile) {
+      dispatch(getDoctorProfile(null));
+    }
+
+    // Load dashboard data
+    dispatch(getDashboardStats());
+    dispatch(getTodayAppointments());
+    
+    // Load upcoming appointments for the month
+    const startDate = new Date().toISOString().split('T')[0];
+    const endDate = new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().split('T')[0];
+    dispatch(getUpcomingAppointments({ startDate, endDate }));
+  }, [dispatch, profile]);
+
+  // Auto-refresh every 5 minutes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      dispatch(getTodayAppointments());
+      dispatch(getDashboardStats());
+    }, 5 * 60 * 1000); // 5 minutes
+
+    return () => clearInterval(interval);
+  }, [dispatch]);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
 
-  const todayPatients: Patient[] = [
-    {
-      id: '1',
-      name: 'Stacy Mitchell',
-      time: '9:15 AM',
-      type: 'Weekly Visit',
-      avatar: 'SM',
-      status: 'scheduled'
-    },
-    {
-      id: '2',
-      name: 'Amy Dunham',
-      time: '9:30 AM',
-      type: 'Routine Checkup',
-      avatar: 'AD',
-      status: 'scheduled'
-    },
-    {
-      id: '3',
-      name: 'Demi Joan',
-      time: '9:50 AM',
-      type: 'Report',
-      avatar: 'DJ',
-      status: 'scheduled'
-    },
-    {
-      id: '4',
-      name: 'Susan Myers',
-      time: '10:15 AM',
-      type: 'Weekly Visit',
-      avatar: 'SM',
-      status: 'scheduled'
-    }
-  ];
-
-  const patientDetails: PatientDetail = {
-    name: 'Denzel White',
-    age: 'Male - 28 Years 5 Months',
-    duration: '9 mins',
-    symptoms: ['Fever', 'Cough', 'Heart Burn'],
-    lastChecked: 'Dr Dally on 21 April 2020 (Prescription)',
-    prescription: 'Dextromethorphan - 2 times a day\nIbuprofen - Day and Night before meal\nVitamin',
-    observation: 'High fever and cough at normal hemoglobin levels.'
-  };
-
-  const getDaysInMonth = () => {
-    const start = startOfMonth(currentMonth);
-    const end = endOfMonth(currentMonth);
-    return eachDayOfInterval({ start, end });
-  };
-
   const getTimeBasedGreeting = () => {
     const hour = currentTime.getHours();
     if (hour < 12) return 'Good Morning';
     if (hour < 17) return 'Good Afternoon';
     return 'Good Evening';
+  };
+
+  const handlePatientSelect = (patientId: string) => {
+    dispatch(getPatientProfile(patientId));
+  };
+
+  const convertPathToUrl = (path: string): string => {
+    if (!path) return '';
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
+    }
+    const filename = path.split('/').pop() || '';
+    return `http://localhost:8080/uploads/doctor-profiles/${filename}`;
   };
 
   return (
@@ -103,7 +82,7 @@ const DoctorDashboard: React.FC = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col bg-gray-50">
         {/* Top Navigation */}
-        <header className="bg-white border-b border-gray-200 px-6 py-4">
+        <header className="bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
           <div className="flex items-center justify-between">
             {/* Search Bar */}
             <div className="flex-1 max-w-md">
@@ -111,7 +90,7 @@ const DoctorDashboard: React.FC = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   type="text"
-                  placeholder="Search"
+                  placeholder="Search appointments, patients..."
                   className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
@@ -119,21 +98,24 @@ const DoctorDashboard: React.FC = () => {
 
             {/* Right Section */}
             <div className="flex items-center space-x-4">
-              <button className="p-2 text-gray-400 hover:text-gray-600">
+              <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors relative">
                 <Bell className="w-6 h-6" />
+                <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
               </button>
+
               <div className="flex items-center space-x-3">
                 <img
-                  src={currentUser?.profile?.fullName 
-                    ? `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.profile.fullName)}&background=3b82f6&color=fff`
-                    : "https://ui-avatars.com/api/?name=Dr+Kim&background=3b82f6&color=fff"
+                  src={profile?.doctor?.profilePicture?.path 
+                    ? convertPathToUrl(profile.doctor.profilePicture.path)
+                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.user?.fullName || 'Doctor')}&background=3b82f6&color=fff`
                   }
-                  alt="Doctor"
-                  className="w-8 h-8 rounded-full"
+                  alt="Doctor Profile"
+                  className="w-8 h-8 rounded-full object-cover"
                 />
-                <span className="text-sm font-medium text-gray-700">
-                  {currentUser?.profile?.fullName || 'Dr. Kim'}
-                </span>
+                <div className="text-sm">
+                  <p className="font-medium text-gray-700">{profile?.user?.fullName || 'Doctor'}</p>
+                  <p className="text-gray-500 text-xs">{profile?.user?.email || ''}</p>
+                </div>
               </div>
             </div>
           </div>
@@ -146,214 +128,57 @@ const DoctorDashboard: React.FC = () => {
             <div className="mb-6">
               <h1 className="text-2xl font-bold text-gray-800 mb-1">
                 {getTimeBasedGreeting()} <span className="text-blue-600">
-                  {currentUser?.profile?.fullName || 'Dr. Kim'}!
+                  {profile?.user?.fullName?.split(' ')[0] || 'Doctor'}!
                 </span>
               </h1>
+              <p className="text-gray-600">Here's what's happening in your practice today.</p>
             </div>
 
-            {/* Stats Cards and Main Content */}
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-              {/* Left Section - Stats and Patients */}
-              <div className="lg:col-span-2 space-y-6">
-                {/* Stats Card */}
-                <div className="bg-gradient-to-r from-blue-400 via-blue-500 to-purple-600 rounded-2xl p-6 text-white relative overflow-hidden">
-                  {/* Background decoration */}
-                  <div className="absolute right-0 top-0 w-32 h-32 opacity-20">
-                    <img 
-                      src="/api/placeholder/128/128" 
-                      alt="Doctor illustration"
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-                  
-                  <div className="relative z-10">
-                    <h2 className="text-lg font-medium mb-4">Visits for Today</h2>
-                    <div className="text-4xl font-bold mb-6">104</div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-white/20 backdrop-blur rounded-xl p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm opacity-90">New Patients</span>
-                          <TrendingUp className="w-4 h-4 text-green-300" />
-                        </div>
-                        <div className="text-2xl font-bold">40</div>
-                        <div className="text-sm text-green-300">51% ↗</div>
-                      </div>
-                      
-                      <div className="bg-white/20 backdrop-blur rounded-xl p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm opacity-90">Old Patients</span>
-                          <TrendingDown className="w-4 h-4 text-red-300" />
-                        </div>
-                        <div className="text-2xl font-bold">64</div>
-                        <div className="text-sm text-red-300">20% ↘</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+            {/* Dashboard Metrics */}
+            <div className="mb-8">
+              <DashboardMetrics stats={stats} loading={loading} />
+            </div>
 
-                {/* Patient List */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-                  <div className="flex items-center justify-between p-4 border-b border-gray-100">
-                    <h3 className="text-lg font-semibold text-gray-800">Patient List</h3>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-500">Today</span>
-                      <ChevronDown className="w-4 h-4 text-gray-400" />
-                    </div>
-                  </div>
-                  
-                  <div className="p-4">
-                    <div className="space-y-3">
-                      {todayPatients.map((patient) => (
-                        <div
-                          key={patient.id}
-                          className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
-                          onClick={() => setSelectedPatient(patientDetails)}
-                        >
-                          <div className="flex items-center space-x-3">
-                            <div className="w-10 h-10 bg-pink-100 rounded-full flex items-center justify-center">
-                              <span className="text-sm font-medium text-pink-600">
-                                {patient.avatar}
-                              </span>
-                            </div>
-                            <div>
-                              <h4 className="text-sm font-medium text-gray-800">{patient.name}</h4>
-                              <p className="text-xs text-gray-500">{patient.type}</p>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-sm font-medium text-gray-800">{patient.time}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+            {/* Main Dashboard Content */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Left Section - Appointments */}
+              <div className="lg:col-span-2 space-y-6">
+                <AppointmentsList 
+                  appointments={todayAppointments || []}
+                  onPatientSelect={handlePatientSelect}
+                  loading={loading}
+                />
               </div>
 
-              {/* Right Section - Calendar and Patient Details */}
-              <div className="lg:col-span-2 space-y-6">
-                {/* Calendar */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-                  <div className="flex items-center justify-between p-4 border-b border-gray-100">
-                    <h3 className="text-lg font-semibold text-gray-800">Calendar</h3>
-                    <ChevronDown className="w-4 h-4 text-gray-400" />
-                  </div>
-                  
-                  <div className="p-4">
-                    <div className="text-center mb-4">
-                      <h4 className="text-sm font-medium text-gray-600 mb-2">
-                        {format(currentMonth, 'MMMM yyyy')}
-                      </h4>
-                    </div>
-                    
-                    <div className="grid grid-cols-7 gap-1 mb-2">
-                      {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(day => (
-                        <div key={day} className="text-center text-xs font-medium text-gray-500 py-2">
-                          {day}
-                        </div>
-                      ))}
-                    </div>
-                    
-                    <div className="grid grid-cols-7 gap-1">
-                      {getDaysInMonth().map(day => {
-                        const dayNumber = format(day, 'd');
-                        const isCurrentDay = isToday(day);
-                        
-                        return (
-                          <button
-                            key={day.toISOString()}
-                            className={`
-                              w-8 h-8 text-sm rounded-lg transition-colors
-                              ${isCurrentDay 
-                                ? 'bg-red-500 text-white' 
-                                : 'text-gray-700 hover:bg-gray-100'
-                              }
-                            `}
-                          >
-                            {dayNumber}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    
-                    {/* Upcoming section */}
-                    <div className="mt-6">
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="text-sm font-semibold text-gray-800">Upcoming</h4>
-                        <button className="text-xs text-blue-600 hover:underline">View All</button>
-                      </div>
-                      
-                      <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
-                        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                          <span className="text-xs font-medium text-white">M</span>
-                        </div>
-                        <div className="flex-1">
-                          <h5 className="text-sm font-medium text-gray-800">Monthly doctor's meet</h5>
-                          <p className="text-xs text-gray-500">8 April 2021 | 04:00 PM</p>
-                        </div>
-                        <button className="text-xs bg-blue-600 text-white px-3 py-1 rounded-full">
-                          Join Now
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              {/* Right Section - Calendar */}
+              <div className="space-y-6">
+                <AppointmentCalendar 
+                  appointments={upcomingAppointments || []}
+                />
+              </div>
+            </div>
 
-                {/* Patient Consultation Details */}
-                {selectedPatient && (
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-                    <div className="p-4 border-b border-gray-100">
-                      <h3 className="text-lg font-semibold text-gray-800">Consultation</h3>
-                    </div>
-                    
-                    <div className="p-4">
-                      {/* Patient Info */}
-                      <div className="flex items-center space-x-3 mb-4">
-                        <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
-                          <span className="text-sm font-medium text-gray-600">DW</span>
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-semibold text-gray-800">{selectedPatient.name}</h4>
-                          <p className="text-xs text-gray-500">{selectedPatient.age}</p>
-                        </div>
-                        <div className="ml-auto text-right">
-                          <p className="text-xs text-gray-500">{selectedPatient.duration}</p>
-                        </div>
-                      </div>
-
-                      {/* Symptoms */}
-                      <div className="flex items-center space-x-2 mb-4">
-                        {selectedPatient.symptoms.map((symptom, symptomIndex) => (
-                          <div key={symptomIndex} className="flex items-center space-x-1">
-                            {symptom === 'Fever' && <Thermometer className="w-4 h-4 text-blue-500" />}
-                            {symptom === 'Cough' && <Stethoscope className="w-4 h-4 text-blue-500" />}
-                            {symptom === 'Heart Burn' && <HeartPulse className="w-4 h-4 text-blue-500" />}
-                            <span className="text-xs text-blue-600">{symptom}</span>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Details */}
-                      <div className="space-y-3 text-xs">
-                        <div>
-                          <p className="text-gray-600 mb-1">Last Checked</p>
-                          <p className="text-gray-800">{selectedPatient.lastChecked}</p>
-                        </div>
-                        
-                        <div>
-                          <p className="text-gray-600 mb-1">Observation</p>
-                          <p className="text-gray-800">{selectedPatient.observation}</p>
-                        </div>
-                        
-                        <div>
-                          <p className="text-gray-600 mb-1">Prescription</p>
-                          <p className="text-gray-800 whitespace-pre-line">{selectedPatient.prescription}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
+            {/* Information Cards */}
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h4 className="font-medium text-blue-900 mb-2"> Real Data Dashboard</h4>
+                <p className="text-sm text-blue-800">
+                  This dashboard uses your actual appointment and patient APIs to show real-time data.
+                </p>
+              </div>
+              
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <h4 className="font-medium text-green-900 mb-2">🎥 Video Integration</h4>
+                <p className="text-sm text-green-800">
+                  Click "Join" on any appointment to start a video consultation with your patient.
+                </p>
+              </div>
+              
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                <h4 className="font-medium text-purple-900 mb-2"> Calendar Features</h4>
+                <p className="text-sm text-purple-800">
+                  View all appointments in calendar format and join video calls directly from the calendar.
+                </p>
               </div>
             </div>
           </div>

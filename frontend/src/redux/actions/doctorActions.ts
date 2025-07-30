@@ -1,42 +1,40 @@
 import axios, { type AxiosResponse } from 'axios';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import type {
-    Doctor,
-    DoctorAvailability,
+  Doctor,
+  DoctorAvailability,
 } from '../types/doctorTypes';
 import { BASE_URL } from '../../constant_url';
 
 // Define API response structure
 interface ApiResponse<T = unknown> {
-  data: {
-    body: T;
-  };
+  status: number;
+  message: string;
+  body: T;
 }
 
-// Define direct response structure for axios calls
+// For file upload responses
 interface DirectApiResponse {
-  data: {
-    body: unknown;
-  };
+  status: number;
+  message: string;
+  body: unknown;
 }
 
-// Define error structure
+// Error response also follows ApiResponse structure
 interface ApiError {
   response?: {
-    data?: {
-      message?: string;
-    };
+    data?: ApiResponse<null>;
   };
   message: string;
 }
 
-// Helper function for API calls
-const apiRequest = async (
+// Generic API call helper
+const apiRequest = async <T = unknown>(
   url: string,
   method: string = 'GET',
   data?: unknown,
   headers: Record<string, string> = {}
-): Promise<AxiosResponse<ApiResponse>> => {
+): Promise<AxiosResponse<ApiResponse<T>>> => {
   const token = localStorage.getItem('accessToken');
   const config = {
     method,
@@ -51,46 +49,40 @@ const apiRequest = async (
   return axios(config);
 };
 
-// Fetch Doctors Action - Added for AppointmentBooking
+// Fetch doctors (for filters/search)
 export const fetchDoctors = createAsyncThunk(
   'doctor/fetchDoctors',
-  async (params: { 
-    specialization?: string; 
+  async (params: {
+    specialization?: string;
     location?: string;
     availability?: string;
     rating?: number;
     experience?: number;
-    consultationFee?: {
-      min?: number;
-      max?: number;
-    };
-    lng?: number; 
-    lat?: number; 
-    radius?: number; 
-    page?: number; 
+    consultationFee?: { min?: number; max?: number };
+    lng?: number;
+    lat?: number;
+    radius?: number;
+    page?: number;
     limit?: number;
     search?: string;
   } = {}, { rejectWithValue }) => {
     try {
       const queryParams = new URLSearchParams();
-      
-      // Handle nested consultationFee object
       Object.entries(params).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
           if (key === 'consultationFee' && typeof value === 'object') {
-            const feeObj = value as { min?: number; max?: number };
-            if (feeObj.min !== undefined) queryParams.append('minFee', String(feeObj.min));
-            if (feeObj.max !== undefined) queryParams.append('maxFee', String(feeObj.max));
+            if (value.min !== undefined) queryParams.append('minFee', String(value.min));
+            if (value.max !== undefined) queryParams.append('maxFee', String(value.max));
           } else {
             queryParams.append(key, String(value));
           }
         }
       });
-      
+
       const queryString = queryParams.toString();
-      const url = queryString ? `/doctors/list/all?${queryString}` : '/doctors/list/all';
-      const response = await apiRequest(url);
-      return response.data.data.body;
+      const url = queryString ? `/api/doctors/list/all?${queryString}` : '/api/doctors/list/all';
+      const response = await apiRequest<Doctor[]>(url);
+      return response.data.body;
     } catch (error) {
       const apiError = error as ApiError;
       return rejectWithValue(apiError.response?.data?.message || apiError.message);
@@ -103,9 +95,9 @@ export const getDoctorProfile = createAsyncThunk(
   'doctor/getDoctorProfile',
   async (doctorId: string | null, { rejectWithValue }) => {
     try {
-      const url = doctorId ? `/doctors/profile?doctorId=${doctorId}` : '/doctors/profile';
-      const response = await apiRequest(url);
-      return response.data.data.body;
+      const url = doctorId ? `/api/doctors/profile?doctorId=${doctorId}` : '/api/doctors/profile';
+      const response = await apiRequest<Doctor>(url);
+      return response.data.body;
     } catch (error) {
       const apiError = error as ApiError;
       return rejectWithValue(apiError.response?.data?.message || apiError.message);
@@ -117,8 +109,8 @@ export const updateBasicDoctorProfile = createAsyncThunk(
   'doctor/updateBasicDoctorProfile',
   async (profileData: Partial<Doctor>, { rejectWithValue }) => {
     try {
-      const response = await apiRequest('/doctors/profile/basic', 'PUT', profileData);
-      return response.data.data.body;
+      const response = await apiRequest<Doctor>('/api/doctors/profile/basic', 'PUT', profileData);
+      return response.data.body;
     } catch (error) {
       const apiError = error as ApiError;
       return rejectWithValue(apiError.response?.data?.message || apiError.message);
@@ -130,8 +122,8 @@ export const updateDoctorAddress = createAsyncThunk(
   'doctor/updateDoctorAddress',
   async (addressData: { address: string; coordinates: [number, number] }, { rejectWithValue }) => {
     try {
-      const response = await apiRequest('/doctors/profile/address', 'PUT', addressData);
-      return response.data.data.body;
+      const response = await apiRequest('/api/doctors/profile/address', 'PUT', addressData);
+      return response.data.body;
     } catch (error) {
       const apiError = error as ApiError;
       return rejectWithValue(apiError.response?.data?.message || apiError.message);
@@ -145,15 +137,16 @@ export const uploadProfilePicture = createAsyncThunk(
     try {
       const formData = new FormData();
       formData.append('image', file);
-      
+
       const token = localStorage.getItem('accessToken');
-      const response = await axios.post<DirectApiResponse>(`${BASE_URL}/doctors/profile-picture`, formData, {
+      const response = await axios.post<DirectApiResponse>(`${BASE_URL}/api/doctors/profile-picture`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${token}`,
         },
       });
-      return response.data.data.body;
+
+      return response.data.body;
     } catch (error) {
       const apiError = error as ApiError;
       return rejectWithValue(apiError.response?.data?.message || apiError.message);
@@ -161,13 +154,13 @@ export const uploadProfilePicture = createAsyncThunk(
   }
 );
 
-// Availability Actions
+// Availability
 export const updateAvailability = createAsyncThunk(
   'doctor/updateAvailability',
   async (slots: DoctorAvailability[], { rejectWithValue }) => {
     try {
-      const response = await apiRequest('/doctors/profile/availability', 'PUT', { slots });
-      return response.data.data.body;
+      const response = await apiRequest('/api/doctors/profile/availability', 'PUT', { slots });
+      return response.data.body;
     } catch (error) {
       const apiError = error as ApiError;
       return rejectWithValue(apiError.response?.data?.message || apiError.message);
@@ -179,9 +172,9 @@ export const getAvailability = createAsyncThunk(
   'doctor/getAvailability',
   async ({ doctorId }: { doctorId?: string } = {}, { rejectWithValue }) => {
     try {
-      const url = doctorId ? `/doctors/availability?doctorId=${doctorId}` : '/doctors/availability';
+      const url = doctorId ? `/api/doctors/availability?doctorId=${doctorId}` : `/api/doctors/availability`;
       const response = await apiRequest(url);
-      return response.data.data.body;
+      return response.data.body;
     } catch (error) {
       const apiError = error as ApiError;
       return rejectWithValue(apiError.response?.data?.message || apiError.message);
@@ -189,22 +182,27 @@ export const getAvailability = createAsyncThunk(
   }
 );
 
-// Credentials Actions
+// Credentials
 export const submitDoctorCredential = createAsyncThunk(
   'doctor/submitDoctorCredential',
   async ({ doctorId, file }: { doctorId: string; file: File }, { rejectWithValue }) => {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      
+
       const token = localStorage.getItem('accessToken');
-      const response = await axios.post<DirectApiResponse>(`${BASE_URL}/doctors/${doctorId}/credentials`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      return response.data.data.body;
+      const response = await axios.post<DirectApiResponse>(
+        `${BASE_URL}/api/doctors/${doctorId}/credentials`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data.body;
     } catch (error) {
       const apiError = error as ApiError;
       return rejectWithValue(apiError.response?.data?.message || apiError.message);
@@ -216,8 +214,8 @@ export const getDoctorCredentials = createAsyncThunk(
   'doctor/getDoctorCredentials',
   async (doctorId: string, { rejectWithValue }) => {
     try {
-      const response = await apiRequest(`/doctors/${doctorId}/credentials`);
-      return response.data.data.body;
+      const response = await apiRequest(`/api/doctors/${doctorId}/credentials`);
+      return response.data.body;
     } catch (error) {
       const apiError = error as ApiError;
       return rejectWithValue(apiError.response?.data?.message || apiError.message);
@@ -229,8 +227,8 @@ export const getDoctorCredentialById = createAsyncThunk(
   'doctor/getDoctorCredentialById',
   async ({ doctorId, credentialId }: { doctorId: string; credentialId: string }, { rejectWithValue }) => {
     try {
-      const response = await apiRequest(`/doctors/${doctorId}/credentials/${credentialId}`);
-      return response.data.data.body;
+      const response = await apiRequest(`/api/doctors/${doctorId}/credentials/${credentialId}`);
+      return response.data.body;
     } catch (error) {
       const apiError = error as ApiError;
       return rejectWithValue(apiError.response?.data?.message || apiError.message);
@@ -242,12 +240,8 @@ export const approveDoctorCredential = createAsyncThunk(
   'doctor/approveDoctorCredential',
   async ({ doctorId, credentialId, adminId }: { doctorId: string; credentialId: string; adminId: string }, { rejectWithValue }) => {
     try {
-      const response = await apiRequest(
-        `/doctors/${doctorId}/credentials/${credentialId}/approve`,
-        'PUT',
-        { adminId }
-      );
-      return response.data.data.body;
+      const response = await apiRequest(`/api/doctors/${doctorId}/credentials/${credentialId}/approve`, 'PUT', { adminId });
+      return response.data.body;
     } catch (error) {
       const apiError = error as ApiError;
       return rejectWithValue(apiError.response?.data?.message || apiError.message);
@@ -259,12 +253,8 @@ export const rejectDoctorCredential = createAsyncThunk(
   'doctor/rejectDoctorCredential',
   async ({ doctorId, credentialId, adminId, reason }: { doctorId: string; credentialId: string; adminId: string; reason: string }, { rejectWithValue }) => {
     try {
-      const response = await apiRequest(
-        `/doctors/${doctorId}/credentials/${credentialId}/reject`,
-        'PUT',
-        { adminId, reason }
-      );
-      return response.data.data.body;
+      const response = await apiRequest(`/api/doctors/${doctorId}/credentials/${credentialId}/reject`, 'PUT', { adminId, reason });
+      return response.data.body;
     } catch (error) {
       const apiError = error as ApiError;
       return rejectWithValue(apiError.response?.data?.message || apiError.message);
@@ -272,13 +262,13 @@ export const rejectDoctorCredential = createAsyncThunk(
   }
 );
 
-// Public Actions
+// Public-facing endpoints
 export const getPublicDoctorProfile = createAsyncThunk(
   'doctor/getPublicDoctorProfile',
   async (doctorId: string, { rejectWithValue }) => {
     try {
-      const response = await apiRequest(`/doctors/public/${doctorId}`);
-      return response.data.data.body;
+      const response = await apiRequest(`/api/doctors/public/${doctorId}`);
+      return response.data.body;
     } catch (error) {
       const apiError = error as ApiError;
       return rejectWithValue(apiError.response?.data?.message || apiError.message);
@@ -288,13 +278,13 @@ export const getPublicDoctorProfile = createAsyncThunk(
 
 export const listDoctors = createAsyncThunk(
   'doctor/listDoctors',
-  async (params: { 
-    specialization?: string; 
-    lng?: number; 
-    lat?: number; 
-    radius?: number; 
-    page?: number; 
-    limit?: number 
+  async (params: {
+    specialization?: string;
+    lng?: number;
+    lat?: number;
+    radius?: number;
+    page?: number;
+    limit?: number;
   } = {}, { rejectWithValue }) => {
     try {
       const queryParams = new URLSearchParams();
@@ -303,11 +293,10 @@ export const listDoctors = createAsyncThunk(
           queryParams.append(key, String(value));
         }
       });
-      
-      const queryString = queryParams.toString();
-      const url = queryString ? `/doctors/list/all?${queryString}` : '/doctors/list/all';
+
+      const url = queryParams.toString() ? `/api/doctors/list/all?${queryParams}` : '/api/doctors/list/all';
       const response = await apiRequest(url);
-      return response.data.data.body;
+      return response.data.body;
     } catch (error) {
       const apiError = error as ApiError;
       return rejectWithValue(apiError.response?.data?.message || apiError.message);
@@ -315,13 +304,12 @@ export const listDoctors = createAsyncThunk(
   }
 );
 
-// Get Doctor by ID - Useful for appointment booking
 export const getDoctorById = createAsyncThunk(
   'doctor/getDoctorById',
   async (doctorId: string, { rejectWithValue }) => {
     try {
-      const response = await apiRequest(`/doctors/${doctorId}`);
-      return response.data.data.body;
+      const response = await apiRequest(`/api/doctors/${doctorId}`);
+      return response.data.body;
     } catch (error) {
       const apiError = error as ApiError;
       return rejectWithValue(apiError.response?.data?.message || apiError.message);
@@ -329,13 +317,12 @@ export const getDoctorById = createAsyncThunk(
   }
 );
 
-// Get Doctor Availability by Date - For appointment booking
 export const getDoctorAvailabilityByDate = createAsyncThunk(
   'doctor/getDoctorAvailabilityByDate',
   async ({ doctorId, date }: { doctorId: string; date: string }, { rejectWithValue }) => {
     try {
-      const response = await apiRequest(`/doctors/${doctorId}/availability?date=${date}`);
-      return response.data.data.body;
+      const response = await apiRequest(`/api/doctors/${doctorId}/availability?date=${date}`);
+      return response.data.body;
     } catch (error) {
       const apiError = error as ApiError;
       return rejectWithValue(apiError.response?.data?.message || apiError.message);
@@ -343,18 +330,13 @@ export const getDoctorAvailabilityByDate = createAsyncThunk(
   }
 );
 
-// Reset action
+// Utility actions
 export const resetDoctorState = createAsyncThunk(
   'doctor/resetDoctorState',
-  async () => {
-    return null;
-  }
+  async () => null
 );
 
-// Clear error action
 export const clearDoctorError = createAsyncThunk(
   'doctor/clearDoctorError',
-  async () => {
-    return null;
-  }
+  async () => null
 );

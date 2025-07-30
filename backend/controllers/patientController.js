@@ -164,5 +164,6 @@ const updatePatientProfile = async (req, res) => {
 
 module.exports = {
   getPatientProfile,
+  getPatientProfileForDoctor,
   updatePatientProfile
 };
