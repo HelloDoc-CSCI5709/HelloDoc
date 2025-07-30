@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ChevronDown, ChevronLeft, ChevronRight, Video, Clock } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isToday, isSameDay, startOfWeek, endOfWeek } from 'date-fns';
 import { useAppDispatch } from '../../../redux/hooks';
-import { createVideoRoom, getVideoRoomToken } from '../../../redux/actions/dashboardActions';
 import { toast } from 'react-toastify';
 
 interface Appointment {
@@ -20,6 +20,7 @@ interface AppointmentCalendarProps {
 
 const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({ appointments }) => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate(); // Add useNavigate hook
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
@@ -47,38 +48,9 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({ appointments 
     setCurrentMonth(newMonth);
   };
 
-  const handleJoinVideoCall = async (appointmentId: string) => {
-    try {
-      // Try existing room first
-      try {
-        const tokenResponse = await dispatch(getVideoRoomToken(appointmentId)).unwrap();
-        if (tokenResponse.token) {
-          window.open(tokenResponse.joinUrl || tokenResponse.roomUrl, '_blank');
-          return;
-        }
-      } catch {
-        console.log('No existing room, creating new one...');
-      }
-
-      const roomResponse = await dispatch(createVideoRoom({
-        appointmentId,
-        expiresInMinutes: 60
-      })).unwrap();
-
-      if (roomResponse.joinUrl || roomResponse.roomUrl) {
-        window.open(roomResponse.joinUrl || roomResponse.roomUrl, '_blank');
-        toast.success('Video call started successfully');
-      } else {
-        toast.error('Unable to start video call');
-      }
-    } catch (error: unknown) {
-      console.error('Video call error:', error);
-      if (error instanceof Error) {
-        toast.error(`Failed to start video call: ${error.message}`);
-      } else {
-        toast.error('Failed to start video call due to unknown error');
-      }
-    }
+  // Updated handleJoinVideoCall to navigate to video page
+  const handleJoinVideoCall = (appointmentId: string) => {
+    navigate(`/video/${appointmentId}`);
   };
 
   const selectedDateAppointments = selectedDate ? getAppointmentsForDate(selectedDate) : [];

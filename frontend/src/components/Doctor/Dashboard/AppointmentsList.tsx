@@ -1,17 +1,25 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ChevronDown, Clock, Video, Calendar, User } from 'lucide-react';
-import { cancelAppointment, createVideoRoom, getVideoRoomToken } from '../../../redux/actions/dashboardActions';
+import { cancelAppointment } from '../../../redux/actions/dashboardActions';
 import { useAppDispatch } from '../../../redux/hooks';
 import { toast } from 'react-toastify';
 
+// ✅ Updated interface to match your actual API response
 interface Appointment {
-  id: string;
-  patientId: string;
-  patientName?: string;
+  _id: string;  // API returns _id, not id
+  patientId: {  // API returns populated patient object
+    _id: string;
+    fullName: string;
+    email?: string;
+  };
+  doctorId: {   // API returns populated doctor object
+    _id: string;
+    fullName: string;
+  };
   scheduledFor: string;
   reason: string;
   status: 'scheduled' | 'completed' | 'cancelled' | 'no_show';
-  doctorId: string;
 }
 
 interface AppointmentsListProps {
@@ -22,6 +30,7 @@ interface AppointmentsListProps {
 
 const AppointmentsList: React.FC<AppointmentsListProps> = ({ appointments, onPatientSelect, loading }) => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
 
   const handleCancelAppointment = async (appointmentId: string) => {
     if (window.confirm('Are you sure you want to cancel this appointment?')) {
@@ -35,33 +44,9 @@ const AppointmentsList: React.FC<AppointmentsListProps> = ({ appointments, onPat
     }
   };
 
-  const handleJoinVideoCall = async (appointmentId: string) => {
-    try {
-      try {
-        const tokenResponse = await dispatch(getVideoRoomToken(appointmentId)).unwrap();
-        if (tokenResponse.token) {
-          window.open(tokenResponse.joinUrl || tokenResponse.roomUrl, '_blank');
-          return;
-        }
-      } catch {
-        console.log('No existing room, creating new one...');
-      }
-
-      const roomResponse = await dispatch(createVideoRoom({
-        appointmentId,
-        expiresInMinutes: 60
-      })).unwrap();
-
-      if (roomResponse.joinUrl || roomResponse.roomUrl) {
-        window.open(roomResponse.joinUrl || roomResponse.roomUrl, '_blank');
-        toast.success('Video call started successfully');
-      } else {
-        toast.error('Unable to start video call');
-      }
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      toast.error(`Failed to start video call: ${message}`);
-    }
+  // ✅ Updated to use navigation like calendar component
+  const handleJoinVideoCall = (appointmentId: string) => {
+    navigate(`/video/${appointmentId}`);
   };
 
   const getStatusColor = (status: string) => {
@@ -143,7 +128,7 @@ const AppointmentsList: React.FC<AppointmentsListProps> = ({ appointments, onPat
               .sort((a, b) => new Date(a.scheduledFor).getTime() - new Date(b.scheduledFor).getTime())
               .map((appointment) => (
                 <div
-                  key={appointment.id}
+                  key={appointment._id}
                   className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg border border-gray-100 transition-colors group"
                 >
                   <div className="flex items-center space-x-3">
@@ -151,8 +136,9 @@ const AppointmentsList: React.FC<AppointmentsListProps> = ({ appointments, onPat
                       <User className="w-5 h-5 text-white" />
                     </div>
                     <div>
+            
                       <h4 className="text-sm font-medium text-gray-800">
-                        {appointment.patientName || `Patient ${appointment.patientId}`}
+                        {appointment.patientId?.fullName || `Patient ${appointment.patientId?._id || 'Unknown'}`}
                       </h4>
                       <p className="text-xs text-gray-500">{appointment.reason}</p>
                       <div className="flex items-center space-x-2 mt-1">
@@ -183,7 +169,7 @@ const AppointmentsList: React.FC<AppointmentsListProps> = ({ appointments, onPat
                       {appointment.status === 'scheduled' && isUpcoming(appointment.scheduledFor) && (
                         <>
                           <button
-                            onClick={() => handleJoinVideoCall(appointment.id)}
+                            onClick={() => handleJoinVideoCall(appointment._id)}
                             className="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 flex items-center space-x-1"
                             title="Join Video Call"
                           >
@@ -191,7 +177,7 @@ const AppointmentsList: React.FC<AppointmentsListProps> = ({ appointments, onPat
                             <span>Join</span>
                           </button>
                           <button
-                            onClick={() => handleCancelAppointment(appointment.id)}
+                            onClick={() => handleCancelAppointment(appointment._id)}
                             className="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700"
                             title="Cancel Appointment"
                           >
@@ -201,7 +187,7 @@ const AppointmentsList: React.FC<AppointmentsListProps> = ({ appointments, onPat
                       )}
                       {onPatientSelect && (
                         <button
-                          onClick={() => onPatientSelect(appointment.patientId)}
+                          onClick={() => onPatientSelect(appointment.patientId._id)}
                           className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
                           title="View Patient Details"
                         >

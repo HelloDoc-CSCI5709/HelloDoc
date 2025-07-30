@@ -6,7 +6,8 @@ import appointmentReducer from './reducers/appointmentReducer';
 import patientReducer from './reducers/patientReducer';
 import videoReducer from './reducers/videoReducers'
 import doctorReducer from './reducers/doctorReducer';
-import dashboardReducer from './reducers/dashboardReducer'; 
+import dashboardReducer from './reducers/dashboardReducer';
+import healthRecordReducer from './reducers/healthRecordReducer'; // Add this
 
 export const store = configureStore({
   reducer: {
@@ -17,7 +18,8 @@ export const store = configureStore({
     patient: patientReducer,
     video: videoReducer,
     doctor: doctorReducer,
-    dashboard: dashboardReducer, // Add this
+    dashboard: dashboardReducer,
+    healthRecord: healthRecordReducer, // Add this
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -26,7 +28,12 @@ export const store = configureStore({
           'doctor/updateAvailability/pending',
           'doctor/updateAvailability/fulfilled',
           'doctor/updateAvailability/rejected',
-          'doctor/getAvailability/fulfilled'
+          'doctor/getAvailability/fulfilled',
+          'dashboard/getDashboardStats/fulfilled',
+          'dashboard/getTodayAppointments/fulfilled',
+          'dashboard/getUpcomingAppointments/fulfilled',
+          'healthRecord/getPatientHealthRecords/fulfilled', // Add this
+          'healthRecord/getDoctorPatients/fulfilled', // Add this
         ],
         ignoredActionPaths: [
           'payload.headers', 
@@ -40,6 +47,8 @@ export const store = configureStore({
           'auth.accessToken',
           'forgotPassword',
           'doctor.availability',
+          'dashboard',
+          'healthRecord', // Add this
           'admin'
         ],
       },

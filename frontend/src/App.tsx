@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Login from './pages/Login'
 import PatientRegister from './pages/PatientRegister'
@@ -21,13 +20,12 @@ import VideoCallPage from './pages/VideoCallPage'
 import BookAppointment from './pages/AppointmentBooking'
 import { ToastContainer } from "react-toastify";
 import DoctorProfilePage from './pages/DoctorProfilePage';
+import DoctorHealthRecord from './pages/DoctorHealthRecord'; // Add this import
 import "react-toastify/dist/ReactToastify.css";
 //import AdminDashboard from './pages/AdminDashboard'
 
 import ChatPage from './pages/ChatPage'
-
 import AllAppointments from './pages/AllAppointments'
-
 
 function App() {
   return (
@@ -58,6 +56,7 @@ function App() {
           <Route path="/chat" element={<ChatPage />} /> 
           <Route path="/video/:appointmentId" element={<PreJoinVideo />} />
           <Route path="/doctor-profile" element={<DoctorProfilePage />} />
+          <Route path="/health-record" element={<DoctorHealthRecord />} /> {/* Add this route */}
         
           <Route
             path="/video/:appointmentId/room/:roomId"

@@ -56,7 +56,7 @@ export const getDoctorAppointments = createAsyncThunk<Appointment[]>(
   'dashboard/getDoctorAppointments',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await fetchWithAuth<Appointment[]>('/appointments');
+      const response = await fetchWithAuth<Appointment[]>('/api/appointments/');
       return response.body;
     } catch (error: unknown) {
       return rejectWithValue((error as Error).message || 'Failed to load appointments');
@@ -68,7 +68,7 @@ export const getTodayAppointments = createAsyncThunk<Appointment[]>(
   'dashboard/getTodayAppointments',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await fetchWithAuth<Appointment[]>('/appointments');
+      const response = await fetchWithAuth<Appointment[]>('/api/appointments/');
       const today = new Date().toISOString().split('T')[0];
       const filtered = response.body.filter(apt => {
         const aptDate = new Date(apt.scheduledFor).toISOString().split('T')[0];
@@ -85,7 +85,7 @@ export const getUpcomingAppointments = createAsyncThunk<Appointment[], { startDa
   'dashboard/getUpcomingAppointments',
   async ({ startDate, endDate }, { rejectWithValue }) => {
     try {
-      const response = await fetchWithAuth<Appointment[]>('/appointments');
+      const response = await fetchWithAuth<Appointment[]>('/api/appointments/');
       const filtered = response.body.filter(apt => {
         const aptDate = new Date(apt.scheduledFor).toISOString().split('T')[0];
         return aptDate >= startDate && aptDate <= endDate;
@@ -101,7 +101,7 @@ export const getAppointmentById = createAsyncThunk<Appointment, string>(
   'dashboard/getAppointmentById',
   async (appointmentId, { rejectWithValue }) => {
     try {
-      const response = await fetchWithAuth<Appointment>(`/appointments/${appointmentId}`);
+      const response = await fetchWithAuth<Appointment>(`/api/appointments/${appointmentId}`);
       return response.body;
     } catch (error: unknown) {
       return rejectWithValue((error as Error).message || 'Failed to load appointment details');
@@ -113,7 +113,7 @@ export const cancelAppointment = createAsyncThunk<Appointment, string>(
   'dashboard/cancelAppointment',
   async (appointmentId, { rejectWithValue }) => {
     try {
-      const response = await fetchWithAuth<Appointment>(`/appointments/cancel/${appointmentId}`, {
+      const response = await fetchWithAuth<Appointment>(`/api/appointments/cancel/${appointmentId}`, {
         method: 'PUT',
       });
       return response.body;
@@ -130,7 +130,7 @@ export const rescheduleAppointment = createAsyncThunk<
   'dashboard/rescheduleAppointment',
   async ({ appointmentId, scheduledFor, reason }, { rejectWithValue }) => {
     try {
-      const response = await fetchWithAuth<Appointment>(`/appointments/reschedule/${appointmentId}`, {
+      const response = await fetchWithAuth<Appointment>(`/api/appointments/reschedule/${appointmentId}`, {
         method: 'PUT',
         body: JSON.stringify({ scheduledFor, reason }),
       });
@@ -146,7 +146,7 @@ export const getPatientProfile = createAsyncThunk<PatientProfile, string>(
   'dashboard/getPatientProfile',
   async (_patientId, { rejectWithValue }) => {
     try {
-      const response = await fetchWithAuth<PatientProfile>('/patient/profile');
+      const response = await fetchWithAuth<PatientProfile>('/api/patient/profile');
       return response.body;
     } catch (error: unknown) {
       return rejectWithValue((error as Error).message || 'Failed to load patient profile');
@@ -159,7 +159,7 @@ export const createVideoRoom = createAsyncThunk<VideoRoom, { appointmentId: stri
   'dashboard/createVideoRoom',
   async ({ appointmentId, expiresInMinutes = 60 }, { rejectWithValue }) => {
     try {
-      const response = await fetchWithAuth<VideoRoom>('/video/room', {
+      const response = await fetchWithAuth<VideoRoom>('/api/video/room', {
         method: 'POST',
         body: JSON.stringify({ appointmentId, expiresInMinutes }),
       });
@@ -174,7 +174,7 @@ export const getVideoRoomToken = createAsyncThunk<VideoRoom, string>(
   'dashboard/getVideoRoomToken',
   async (appointmentId, { rejectWithValue }) => {
     try {
-      const response = await fetchWithAuth<VideoRoom>(`/video/token/${appointmentId}`);
+      const response = await fetchWithAuth<VideoRoom>(`/api/video/${appointmentId}`);
       return response.body;
     } catch (error: unknown) {
       return rejectWithValue((error as Error).message || 'Failed to get video room token');
@@ -187,7 +187,7 @@ export const getDashboardStats = createAsyncThunk<DashboardStats>(
   'dashboard/getDashboardStats',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await fetchWithAuth<Appointment[]>('/appointments');
+      const response = await fetchWithAuth<Appointment[]>('/api/appointments/');
       const appointments = response.body;
 
       const today = new Date();
