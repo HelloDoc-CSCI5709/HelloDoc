@@ -270,14 +270,6 @@ function Login() {
                 </button>
               </div>
 
-              <div className="flex items-center justify-between text-sm text-gray-600">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" className="form-checkbox w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
-                  <span className="font-medium">Remember Me</span>
-                </label>
-                <Link to="/forgot-password" className="text-blue-600 font-medium hover:text-blue-800 hover:underline transition-colors duration-200">Forgot Password?</Link>
-              </div>
-
               <button
                 type="submit"
                 disabled={isLoading}

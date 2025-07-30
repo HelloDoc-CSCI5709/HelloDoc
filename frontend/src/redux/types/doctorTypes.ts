@@ -1,3 +1,4 @@
+// Main Doctor interface - Fixed syntax and added proper export
 export interface Doctor {
   isActive: boolean;
   id: string;

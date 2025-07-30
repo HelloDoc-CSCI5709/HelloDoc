@@ -16,11 +16,22 @@ const ChatLayout = () => {
   const [appointments, setAppointments] = useState<AppointmentType[]>([]);
   const [activeAppointment, setActiveAppointment] = useState<AppointmentType | null>(null);
   const [messages, setMessages] = useState<MessageType[]>([]);
+  const [userId, setUserId] = useState('');
+  const [role, setRole] = useState<'doctor' | 'patient' | ''>('');
+  const [token, setToken] = useState('');
 
-  const token = localStorage.getItem('accessToken');
-  const decoded = decodeToken(token);
-  const userId = decoded?.userId;
-  const role = decoded?.role;
+  // Load token & decode once on mount
+  useEffect(() => {
+    const storedToken = localStorage.getItem('accessToken');
+    if (!storedToken) return;
+
+    const decoded = decodeToken(storedToken);
+    if (decoded?.userId && decoded?.role) {
+      setUserId(decoded.userId);
+      setRole(decoded.role);
+      setToken(storedToken);
+    }
+  }, []);
 
   const fetchAppointments = useCallback(async () => {
     try {
@@ -36,23 +47,30 @@ const ChatLayout = () => {
     }
   }, [token]);
 
-  const fetchMessages = useCallback(async (appointmentId: string) => {
-    try {
-      const res = await fetch(`${import.meta.env.VITE_BACKEND_BASE_URL}/api/messages/${appointmentId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const data = await res.json();
-      setMessages(data.body);
-    } catch (err) {
-      console.error('Failed to fetch messages', err);
-    }
-  }, [token]);
+  const fetchMessages = useCallback(
+    async (appointmentId: string) => {
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_BACKEND_BASE_URL}/api/messages/${appointmentId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        const data = await res.json();
+        setMessages(data.body);
+      } catch (err) {
+        console.error('Failed to fetch messages', err);
+      }
+    },
+    [token]
+  );
 
   useEffect(() => {
-    if (!userId || !token || !role) return;
-    fetchAppointments();
+    if (userId && token && role) {
+      fetchAppointments();
+    }
   }, [userId, token, role, fetchAppointments]);
 
   useEffect(() => {
@@ -63,11 +81,9 @@ const ChatLayout = () => {
 
   useEffect(() => {
     if (!activeAppointment) return;
-
     const interval = setInterval(() => {
       fetchMessages(activeAppointment._id);
     }, 5000);
-
     return () => clearInterval(interval);
   }, [activeAppointment, fetchMessages]);
 
@@ -79,7 +95,6 @@ const ChatLayout = () => {
     );
   }
 
-  // Choose sidebar and navbar based on role
   const Sidebar = role === 'doctor' ? DoctorSidebar : PatientSidebar;
   const TopNavBar = role === 'doctor' ? DoctorTopNavBar : PatientTopNavBar;
 

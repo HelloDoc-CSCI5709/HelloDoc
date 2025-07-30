@@ -196,5 +196,6 @@ module.exports = {
   getPatientProfile,
   updatePatientProfile,
   getPatientProfileForDoctor,
-  getAllPatients
+  getAllPatients,
+  updatePatientProfile
 };

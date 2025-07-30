@@ -4,27 +4,32 @@ import 'react-toastify/dist/ReactToastify.css';
 
 import ProtectedRoute from './components/ProtectedRoute';
 
-import Login from './pages/Login';
-import PatientRegister from './pages/PatientRegister';
-import DoctorRegister from './pages/DoctorRegister';
-import Home from './pages/Home';
-import AppointmentBooking from './pages/AppointmentBooking';
-import DoctorSelection from './pages/DoctorSelection';
 import DoctorProfile from './pages/DoctorProfile';
-import PatientProfile from './pages/PatientProfile';
-import PatientDashboard from './pages/PatientDashboard';
-import DoctorDashboard from './pages/DoctorDashboard';
-import ForgotPassword from './pages/ForgotPassword';
-import VerifyOtpPage from './pages/VerifyOtp';
-import ResetPassword from './pages/ResetPassword';
-import VerifyEmail from './pages/VerifyEmail';
-import PatientCalendar from './pages/PatientCalendar';
-import DoctorCalendar from './pages/DoctorCalendar';
-import PreJoinVideo from './pages/PreJoinVideo';
-import VideoCallPage from './pages/VideoCallPage';
-import BookAppointment from './pages/AppointmentBooking';
-import ChatPage from './pages/ChatPage';
-import AdminDashboard from './pages/AdminDashboard';
+import Login from './pages/Login'
+import PatientRegister from './pages/PatientRegister'
+import DoctorRegister from './pages/DoctorRegister'
+import Home from './pages/Home'
+import AppointmentBooking from './pages/AppointmentBooking'
+import DoctorSelection from './pages/DoctorSelection'
+import PatientProfile from './pages/PatientProfile'
+import PatientDashboard from './pages/PatientDashboard'
+import DoctorDashboard from './pages/DoctorDashboard'
+import ForgotPassword from './pages/ForgotPassword'
+import VerifyOtpPage from './pages/VerifyOtp'
+import ResetPassword from './pages/ResetPassword'
+import VerifyEmail from './pages/VerifyEmail'
+import PatientCalendar from './pages/PatientCalendar'
+import DoctorCalendar from './pages/DoctorCalendar'
+import PreJoinVideo from './pages/PreJoinVideo'
+import VideoCallPage from './pages/VideoCallPage'
+import BookAppointment from './pages/AppointmentBooking'
+import DoctorProfilePage from './pages/DoctorProfilePage';
+import AdminDashboard from './pages/AdminDashboard'
+
+import ChatPage from './pages/ChatPage'
+
+import AllAppointments from './pages/AllAppointments'
+
 
 function App() {
   return (
@@ -57,6 +62,8 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="/appointments" element={<AllAppointments />} />
+        
           <Route
             path="/video/:appointmentId/room/:roomId"
             element={
@@ -131,6 +138,16 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          <Route
+            path="/doctor/doctor-profile"
+            element={
+              <ProtectedRoute allowedRoles={['doctor']}>
+                <DoctorProfilePage />
+              </ProtectedRoute>
+            }
+          />
+
           <Route
             path="/doctor-calendar"
             element={
