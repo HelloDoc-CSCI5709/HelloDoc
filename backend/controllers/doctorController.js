@@ -9,7 +9,7 @@ const path = require('path');
 const fs = require('fs');
 const axios = require('axios');
 const ics = require('ics');
-const {ALLOWED_SPECIALIZATIONS , FILE_CONFIG, PAGINATION_LIMITS } = require("../config/Constants")
+const { ALLOWED_SPECIALIZATIONS, FILE_CONFIG, PAGINATION_LIMITS } = require('../config/Constants');
 
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
@@ -95,7 +95,6 @@ const checkCredentialForPutApis = async (doctorId) => {
   return { ok: true };
 };
 
-
 const validateAvailabilitySlot = (slot) => {
   const errors = [];
   
@@ -150,7 +149,6 @@ const validateCoordinates = (coordinates) => {
   return errors;
 };
 
-// ICS file validation
 const validateIcsFile = (file) => {
   const errors = [];
   
@@ -182,7 +180,6 @@ const validateIcsFile = (file) => {
   return errors;
 };
 
-// Parse ICS file and extract events
 const parseIcsFile = async (filePath) => {
   try {
     const icsContent = fs.readFileSync(filePath, 'utf8');
@@ -280,7 +277,6 @@ const convertIcsEventsToAvailability = (events, doctorId) => {
   return availabilitySlots;
 };
 
-// Google Maps Geocoding Service
 const geocodeAddress = async (address) => {
   try {
     const GOOGLE_MAPS_API_KEY = process.env.VITE_GOOGLE_MAPS_API_KEY || process.env.GOOGLE_MAPS_API_KEY;
@@ -376,14 +372,14 @@ const validateApproveReject = (data, isRejection) => {
 
 const validatePagination = (page, limit) => {
   const errors = [];
-  const pageNum = parseInt(page);
-  const limitNum = parseInt(limit);
+  const pageNum = parseInt(page) || 1; // Default to page 1
+  const limitNum = parseInt(limit) || 10; // Default to limit 10
   
-  if (isNaN(pageNum) || pageNum < 1) {
+  if (pageNum < 1) {
     errors.push('page must be a positive integer');
   }
   
-  if (isNaN(limitNum) || limitNum < 1 || limitNum > PAGINATION_LIMITS.MAX_PAGE_SIZE) {
+  if (limitNum < 1 || limitNum > PAGINATION_LIMITS.MAX_PAGE_SIZE) {
     errors.push(`limit must be an integer between 1 and ${PAGINATION_LIMITS.MAX_PAGE_SIZE}`);
   }
   
@@ -476,7 +472,6 @@ const buildDoctorFilter = (specialization, lng, lat, radius) => {
   return filter;
 };
 
-// Calculate distance between two points using Haversine formula
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
   const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -498,8 +493,6 @@ const handleAsync = (fn) => (req, res, next) => {
         .json(responseBody(500, `Internal Server Error: ${err.message}`, null));
     });
 };
-
-// CONTROLLER FUNCTIONS
 
 const getDoctorProfile = handleAsync(
   async ({ user, query: { doctorId } }, res) => {
@@ -526,14 +519,12 @@ const getDoctorProfile = handleAsync(
 
     const doctorInfo = await Doctor.findOne({ doctorId: targetId });
 
-    
     return res.status(200).json(responseBody(200, 'Doctor profile retrieved successfully', {
       user: userInfo,
       doctor: doctorInfo || null
     }));
   }
 );
-
 
 const updateBasicDoctorProfile = handleAsync(async (req, res) => {
   const { user } = req;
@@ -556,7 +547,7 @@ const updateBasicDoctorProfile = handleAsync(async (req, res) => {
   }
 
   const credentialCheck = await checkCredentialForPutApis(targetDoctorId);
-    if (!credentialCheck.ok) {
+  if (!credentialCheck.ok) {
     return res.status(403).json(responseBody(403, credentialCheck.message, null));
   }
 
@@ -581,7 +572,6 @@ const updateBasicDoctorProfile = handleAsync(async (req, res) => {
     bio
   } = req.body;
 
-
   const doctorUpdates = {
     ...(dob           && { dob }),
     ...(gender        && { gender }),
@@ -590,15 +580,6 @@ const updateBasicDoctorProfile = handleAsync(async (req, res) => {
     ...(specialization&& { specialization }),
     ...(bio           && { bio })
   };
-
-  // let updatedUser = null;
-  // if (Object.keys(userUpdates).length) {
-  //   updatedUser = await User.findByIdAndUpdate(
-  //     targetDoctorId,
-  //     userUpdates,
-  //     { new: true, runValidators: true }
-  //   );
-  // }
 
   Object.assign(doctor, doctorUpdates);
 
@@ -641,12 +622,10 @@ const updateAvailability = handleAsync(async ({ user, body: { slots } }, res) =>
     return res.status(400).json(responseBody(400, 'Validation error', errors));
   }
 
-  // Extract year/month from first slot
   const startDate = new Date(slots[0].start);
   const year = startDate.getUTCFullYear();
-  const month = startDate.getUTCMonth(); // 0 = Jan
+  const month = startDate.getUTCMonth();
 
-  // Reject if slots span multiple months
   const isSameMonth = slots.every(slot => {
     const d = new Date(slot.start);
     return d.getUTCFullYear() === year && d.getUTCMonth() === month;
@@ -661,7 +640,6 @@ const updateAvailability = handleAsync(async ({ user, body: { slots } }, res) =>
   const monthStart = new Date(Date.UTC(year, month, 1, 0, 0, 0));
   const nextMonthStart = new Date(Date.UTC(year, month + 1, 1, 0, 0, 0));
 
-  // Delete existing slots only in that month
   await DoctorAvailability.deleteMany({
     doctorId: user.userId,
     start: {
@@ -670,7 +648,6 @@ const updateAvailability = handleAsync(async ({ user, body: { slots } }, res) =>
     }
   });
 
-  // Insert new slots
   const entries = slots.map(({ title = 'Available', start, end, location = '', description = '' }) => ({
     doctorId: user.userId,
     title: title.trim(),
@@ -687,56 +664,6 @@ const updateAvailability = handleAsync(async ({ user, body: { slots } }, res) =>
   );
 });
 
-// const updateAvailability = handleAsync(
-//   async ({ user, body: { slots } }, res) => {
-//     const { authorized, message } = checkDoctorAuth(user);
-//     if (!authorized) {
-//       return res
-//         .status(403)
-//         .json(responseBody(403, message, null));
-//     }
-
-//     if (!Array.isArray(slots) || slots.length === 0) {
-//       return res
-//         .status(400)
-//         .json(responseBody(400, 'Provide a non-empty array of availability slots', null));
-//     }
-
-//     const errors = slots.reduce((errs, slot, idx) => {
-//       const slotErrs = validateAvailabilitySlot(slot);
-//       if (slotErrs.length) {
-//         errs.push(`Slot ${idx}: ${slotErrs.join(', ')}`);
-//       }
-//       return errs;
-//     }, []);
-
-//     if (errors.length > 0) {
-//       return res
-//         .status(400)
-//         .json(responseBody(400, 'Validation error', errors));
-//     }
-
-//     await DoctorAvailability.deleteMany({ doctorId: user.userId });
-
-//     const entries = slots.map(
-//       ({ title = 'Available', start, end, location = '', description = '' }) => ({
-//         doctorId:   user.userId,
-//         title:      title.trim(),
-//         start:      new Date(start),
-//         end:        new Date(end),
-//         location:   location.trim(),
-//         description: description.trim(),
-//       })
-//     );
-
-//     const saved = await DoctorAvailability.insertMany(entries);
-//     return res
-//       .status(200)
-//       .json(responseBody(200, 'Availability updated successfully', saved));
-//   }
-// );
-
-// Upload ICS file and update availability
 const uploadAvailabilityFromIcs = handleAsync(async (req, res) => {
   const { user } = req;
 
@@ -797,7 +724,6 @@ const uploadAvailabilityFromIcs = handleAsync(async (req, res) => {
   }
 });
 
-// Update doctor address with automatic geocoding
 const updateDoctorAddress = handleAsync(async (req, res) => {
   const { user } = req;
 
@@ -812,7 +738,6 @@ const updateDoctorAddress = handleAsync(async (req, res) => {
   if (!credentialCheck.ok) {
     return res.status(403).json(responseBody(403, credentialCheck.message, null));
   }
-
 
   const { 
     address,
@@ -843,7 +768,6 @@ const updateDoctorAddress = handleAsync(async (req, res) => {
     let finalAddressComponents = {};
     let formattedAddress = address.trim();
 
-    // Auto-geocode if coordinates not provided or autoGeocode enabled
     if (autoGeocode && (!coordinates || coordinates.length !== 2)) {
       console.log('Geocoding address:', address);
       const geocodeResult = await geocodeAddress(address);
@@ -872,7 +796,6 @@ const updateDoctorAddress = handleAsync(async (req, res) => {
         .json(responseBody(400, 'Either enable autoGeocode or provide valid coordinates', null));
     }
 
-    // Merge manual address components with geocoded ones
     if (city || state || country || postalCode || streetNumber || streetName) {
       finalAddressComponents = {
         ...finalAddressComponents,
@@ -1017,7 +940,6 @@ const getPublicDoctorProfile = handleAsync(async (req, res) => {
   return res.status(200).json(responseBody(200, 'Doctor profile retrieved', publicProfile));
 });
 
-// Enhanced doctor listing with geospatial search
 const listDoctors = handleAsync(async (req, res) => {
   const { 
     specialization, 
@@ -1082,7 +1004,6 @@ const listDoctors = handleAsync(async (req, res) => {
       Object.assign(filter, addressFilter);
     }
     
-    // Geospatial filter if coordinates provided
     if (longitude !== undefined && latitude !== undefined) {
       filter.location = {
         $near: {
@@ -1101,7 +1022,6 @@ const listDoctors = handleAsync(async (req, res) => {
     const approvedDoctorCredentials = await DoctorCredential.find({ status: 'Approved' }).select('doctorId');
     const approvedDoctorIds = approvedDoctorCredentials.map((c) => c.doctorId.toString());
 
-    // Step 2: Add approved doctor filter to existing query
     filter.doctorId = { $in: approvedDoctorIds };
     
     const [doctors, total] = await Promise.all([
@@ -1114,7 +1034,6 @@ const listDoctors = handleAsync(async (req, res) => {
       Doctor.countDocuments(filter)
     ]);
     
-    // Add distance calculation if coordinates provided
     const doctorsWithDistance = doctors.map(doctor => {
       if (longitude !== undefined && latitude !== undefined && doctor.location?.coordinates) {
         const [docLng, docLat] = doctor.location.coordinates;
@@ -1151,6 +1070,79 @@ const listDoctors = handleAsync(async (req, res) => {
   }
 });
 
+const getAllDoctors = handleAsync(async (req, res) => {
+  const { user } = req;
+  const { page = '1', limit = '10' } = req.query;
+
+  const authCheck = checkAdminAuth(user);
+  if (!authCheck.authorized) {
+    return res.status(403).json(responseBody(403, authCheck.message, null));
+  }
+
+  const { errors, pageNum, limitNum } = validatePagination(page, limit);
+  if (errors.length > 0) {
+    return res.status(400).json(responseBody(400, 'Validation error', errors));
+  }
+
+  try {
+    const skip = (pageNum - 1) * limitNum;
+
+    const [users, total, doctors, credentials] = await Promise.all([
+      User.find({ role: 'doctor' })
+        .select('fullName email emailVerified createdAt')
+        .skip(skip)
+        .limit(limitNum)
+        .lean(),
+      User.countDocuments({ role: 'doctor' }),
+      Doctor.find({}).lean(),
+      DoctorCredential.find({}).select('doctorId status reason reviewedAt').lean()
+    ]);
+
+    const doctorMap = doctors.reduce((map, doc) => {
+      map[doc.doctorId.toString()] = {
+        specialization: doc.specialization || [],
+        bio: doc.bio || null,
+        location: doc.location || null,
+        education: doc.education || null,
+        addressComponents: doc.addressComponents || null
+      };
+      return map;
+    }, {});
+
+    const credentialMap = credentials.reduce((map, cred) => {
+      map[cred.doctorId.toString()] = {
+        status: cred.status,
+        reason: cred.reason || null,
+        reviewedAt: cred.reviewedAt || null
+      };
+      return map;
+    }, {});
+
+    const doctorsWithDetails = users.map(user => ({
+      _id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      emailVerified: user.emailVerified,
+      createdAt: user.createdAt,
+      profile: doctorMap[user._id.toString()] || null,
+      credentialStatus: credentialMap[user._id.toString()] || { status: 'Not Submitted', reason: null, reviewedAt: null }
+    }));
+
+    return res.status(200).json(responseBody(200, 'All doctors retrieved successfully', {
+      doctors: doctorsWithDetails,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        pages: Math.ceil(total / limitNum)
+      }
+    }));
+  } catch (error) {
+    console.error('Error retrieving all doctors:', error);
+    return res.status(500).json(responseBody(500, `Error retrieving doctors: ${error.message}`, null));
+  }
+});
+
 const getDoctorPatients = handleAsync(async (req, res) => {
   const { user } = req;
 
@@ -1173,8 +1165,6 @@ const getDoctorPatients = handleAsync(async (req, res) => {
     .json(responseBody(200, 'Patients retrieved successfully', patients));
 });
 
-
-// Geocode location endpoint for frontend use
 const geocodeLocation = handleAsync(async (req, res) => {
   const { location } = req.query;
   
@@ -1239,7 +1229,7 @@ const submitDoctorCredential = handleAsync(async (req, res) => {
     console.error('Error submitting credential:', error);
     return res.status(500).json(
       responseBody(500, `Error submitting credentials: ${error.message}`, null)
-    )
+    );
   }
 });
 
@@ -1315,7 +1305,7 @@ const processCredentialReview = async (req, res, isApproval) => {
     console.error('Error saving credential review:', error);
     return res.status(500).json(
       responseBody(500, `Failed to process credential review: ${error.message}`, null)
-    )
+    );
   }
   
   const response = {
@@ -1382,6 +1372,7 @@ module.exports = {
   uploadProfilePicture,
   getPublicDoctorProfile,
   listDoctors,
+  getAllDoctors,
   geocodeLocation,
   submitDoctorCredential,
   getDoctorCredentials,

@@ -17,7 +17,8 @@ const {
   approveDoctorCredential,
   rejectDoctorCredential,
   getDoctorCredentialById,
-  getDoctorPatients
+  getDoctorPatients,
+  getAllDoctors
 } = require('../controllers/doctorController');
 const { 
   uploadCredential, 
@@ -28,7 +29,8 @@ const {
 const router = Router();
 
 router.get('/public/:doctorId', getPublicDoctorProfile);
-router.get('/list/all', listDoctors);
+router.get('/list/all',verifyToken, listDoctors);
+router.get('/all', verifyToken,authorizeRoles('admin'), getAllDoctors)
 router.get('/geocode', geocodeLocation);
 
 router.use(verifyToken);

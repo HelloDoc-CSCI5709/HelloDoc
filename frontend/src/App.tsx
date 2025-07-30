@@ -1,33 +1,30 @@
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import Login from './pages/Login'
-import PatientRegister from './pages/PatientRegister'
-import DoctorRegister from './pages/DoctorRegister'
-import Home from './pages/Home'
-import AppointmentBooking from './pages/AppointmentBooking'
-import DoctorSelection from './pages/DoctorSelection'
-import DoctorProfile from './pages/DoctorProfile'
-import PatientProfile from './pages/PatientProfile'
-import PatientDashboard from './pages/PatientDashboard'
-import DoctorDashboard from './pages/DoctorDashboard'
-import ForgotPassword from './pages/ForgotPassword'
-import VerifyOtpPage from './pages/VerifyOtp'
-import ResetPassword from './pages/ResetPassword'
-import VerifyEmail from './pages/VerifyEmail'
-import PatientCalendar from './pages/PatientCalendar'
-import DoctorCalendar from './pages/DoctorCalendar'
-import PreJoinVideo from './pages/PreJoinVideo'
-import VideoCallPage from './pages/VideoCallPage'
-import BookAppointment from './pages/AppointmentBooking'
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import ProtectedRoute from './components/ProtectedRoute';
 
-
-
-//import AdminDashboard from './pages/AdminDashboard'
-
-import ChatPage from './pages/ChatPage'
-
+import Login from './pages/Login';
+import PatientRegister from './pages/PatientRegister';
+import DoctorRegister from './pages/DoctorRegister';
+import Home from './pages/Home';
+import AppointmentBooking from './pages/AppointmentBooking';
+import DoctorSelection from './pages/DoctorSelection';
+import DoctorProfile from './pages/DoctorProfile';
+import PatientProfile from './pages/PatientProfile';
+import PatientDashboard from './pages/PatientDashboard';
+import DoctorDashboard from './pages/DoctorDashboard';
+import ForgotPassword from './pages/ForgotPassword';
+import VerifyOtpPage from './pages/VerifyOtp';
+import ResetPassword from './pages/ResetPassword';
+import VerifyEmail from './pages/VerifyEmail';
+import PatientCalendar from './pages/PatientCalendar';
+import DoctorCalendar from './pages/DoctorCalendar';
+import PreJoinVideo from './pages/PreJoinVideo';
+import VideoCallPage from './pages/VideoCallPage';
+import BookAppointment from './pages/AppointmentBooking';
+import ChatPage from './pages/ChatPage';
+import AdminDashboard from './pages/AdminDashboard';
 
 function App() {
   return (
@@ -38,34 +35,125 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/patientregister" element={<PatientRegister />} />
           <Route path="/doctorregister" element={<DoctorRegister />} />
-          <Route path="/book-appointment" element={<AppointmentBooking />} />
-          <Route path="/select-doctor" element={<DoctorSelection />} />
-          <Route path="/doctor-profile" element={<DoctorProfile />} />
-          <Route path="/patient-profile" element={<PatientProfile />} />
-          <Route path="/patient-dashboard" element={<PatientDashboard />} />
-          <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
-          <Route path="/patient-calendar" element={<PatientCalendar />} />
-          <Route path="/doctor-calendar" element={<DoctorCalendar />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/verify-otp" element={<VerifyOtpPage />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
-          <Route path="/patient/book-appointment" element={<BookAppointment />} />
-          {/*<Route path="/patient/appointments" element={<AppointmentsList />} />*/}
-          {/*<Route path="/admin-dashboard" element={<AdminDashboard />} />*/}
-          <Route path="/chat" element={<ChatPage />} /> 
-          <Route path="/video/:appointmentId" element={<PreJoinVideo />} />
-        
+          <Route path="/" element={<Home />} />
+
+          <Route
+            path="/chat"
+            element={
+              <ProtectedRoute>
+                <ChatPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/video/:appointmentId"
+            element={
+              <ProtectedRoute>
+                <PreJoinVideo />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/video/:appointmentId/room/:roomId"
-            element={<VideoCallPage />}
+            element={
+              <ProtectedRoute>
+                <VideoCallPage />
+              </ProtectedRoute>
+            }
           />
 
-          <Route path="*" element={<Home />} />
+          <Route
+            path="/book-appointment"
+            element={
+              <ProtectedRoute allowedRoles={['patient']}>
+                <AppointmentBooking />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/select-doctor"
+            element={
+              <ProtectedRoute allowedRoles={['patient']}>
+                <DoctorSelection />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/doctor-profile"
+            element={
+              <ProtectedRoute allowedRoles={['patient']}>
+                <DoctorProfile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/patient-profile"
+            element={
+              <ProtectedRoute allowedRoles={['patient']}>
+                <PatientProfile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/patient-dashboard"
+            element={
+              <ProtectedRoute allowedRoles={['patient']}>
+                <PatientDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/patient-calendar"
+            element={
+              <ProtectedRoute allowedRoles={['patient']}>
+                <PatientCalendar />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/patient/book-appointment"
+            element={
+              <ProtectedRoute allowedRoles={['patient']}>
+                <BookAppointment />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/doctor-dashboard"
+            element={
+              <ProtectedRoute allowedRoles={['doctor']}>
+                <DoctorDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/doctor-calendar"
+            element={
+              <ProtectedRoute allowedRoles={['doctor']}>
+                <DoctorCalendar />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin-dashboard"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

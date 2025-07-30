@@ -18,4 +18,14 @@ async function sendVerificationCode(user) {
   });
 }
 
-module.exports = { sendVerificationCode };
+async function sendPasswordResetOTP (user , otp) {
+  const bodyText = EMAIL.makePasswordResetBody(user, otp);
+
+  await mailer.send({
+    to: user.email,
+    subject: EMAIL.PASSWORD_RESET_SUBJECT,
+    text: bodyText,
+  });
+}
+
+module.exports = { sendVerificationCode, sendPasswordResetOTP };

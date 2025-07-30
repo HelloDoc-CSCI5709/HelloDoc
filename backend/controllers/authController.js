@@ -1,7 +1,7 @@
-const jwt                = require('jsonwebtoken');
 const bcrypt             = require('bcryptjs');
 const User               = require('../models/User');
 const EmailToken         = require('../models/EmailTokens');
+const PasswordResetToken = require('../models/PasswordResetToken');
 const { responseBody }   = require('../config/responseBody');
 const {
   REQUIRED_FIELDS,
@@ -15,6 +15,13 @@ const {
   revokeRefreshToken,
   generateSecondFactorToken
 } = require('../services/authServices');
+
+const EmailTokens = require('../models/EmailTokens');
+const { sendVerificationCode } = require('../services/emailServices');
+
+const generateOTP = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
 
 const registerUser = (sendVerificationCode) => async (req, res) => {
   try {
@@ -79,15 +86,34 @@ const loginStepOne = async (req, res) => {
 
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
+      console.log(password)
       return res
         .status(401)
         .json(responseBody(401, 'Invalid email or password', null));
     }
 
     if (!user.emailVerified) {
-      return res
-        .status(403)
-        .json(responseBody(403, 'Email not verified', null));
+      const existingEmailToken = await EmailToken.findOne({
+        userId: user._id
+      });
+
+      if (!existingEmailToken) {
+        try {
+          await sendVerificationCode(user);
+          return res
+            .status(403)
+            .json(responseBody(403, 'Email not verified. A new verification link has been sent to your email', null));
+        } catch (emailError) {
+          console.error('Error sending verification email:', emailError);
+          return res
+            .status(403)
+            .json(responseBody(403, 'Email not verified. Please contact support', null));
+        }
+      } else {
+        return res
+          .status(403)
+          .json(responseBody(403, 'Email not verified. Please check your email for the verification link', null));
+      }
     }
 
     const tempToken = generateSecondFactorToken(user);
@@ -236,11 +262,170 @@ const verifyEmail = async (req, res) => {
   }
 };
 
+const forgotPassword = (sendPasswordResetOTP) => async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json(responseBody(400, 'Email is required', null));
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      return res.status(200).json(
+        responseBody(200, 'If the email exists, a password reset OTP has been sent', null)
+      );
+    }
+
+     if (!user.emailVerified) {
+      const existingEmailToken = await EmailToken.findOne({
+        userId: user._id
+      });
+
+      if (!existingEmailToken) {
+        try {
+          await sendVerificationCode(user);
+          return res.status(403).json(
+            responseBody(403, 'Email not verified. A verification link has been sent to your email. Please verify your email first', null)
+          );
+        } catch (emailError) {
+          console.error('Error sending verification email:', emailError);
+          return res.status(403).json(
+            responseBody(403, 'Email not verified. Please contact support', null)
+          );
+        }
+      } else {
+        return res.status(403).json(
+          responseBody(403, 'Email not verified. Please check your email and verify your account first', null)
+        );
+      }
+    }
+
+    await PasswordResetToken.deleteMany({ userId: user._id });
+
+    const otp = generateOTP();
+    
+    const resetToken = new PasswordResetToken({
+      userId: user._id,
+      email: user.email,
+      otp: otp
+    });
+    await resetToken.save();
+
+    await sendPasswordResetOTP(user, otp);
+
+    return res.status(200).json(
+      responseBody(200, 'Password reset OTP sent to your email', null)
+    );
+  } catch (err) {
+    console.error('Forgot password error:', err);
+    return res.status(500).json(responseBody(500, 'Internal Server error', null));
+  }
+};
+
+const verifyResetOTP = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json(responseBody(400, 'Email and OTP are required', null));
+    }
+
+    const resetToken = await PasswordResetToken.findOne({ 
+      email: email.toLowerCase(), 
+      otp: otp,
+      verified: false 
+    });
+
+    if (!resetToken) {
+      return res.status(401).json(responseBody(401, 'Invalid or expired OTP', null));
+    }
+
+    resetToken.verified = true;
+    resetToken.verifiedAt = new Date();
+    await resetToken.save();
+
+    return res.status(200).json(
+      responseBody(200, 'OTP verified successfully. You can now reset your password', {
+        resetTokenId: resetToken._id
+      })
+    );
+  } catch (err) {
+    console.error('Verify OTP error:', err);
+    return res.status(500).json(responseBody(500, 'Internal Server error', null));
+  }
+};
+
+const resetPassword = async (req, res) => {
+  try {
+    const { email, otp, newPassword, confirmPassword } = req.body;
+
+    if (!email || !otp || !newPassword || !confirmPassword) {
+      return res.status(400).json(
+        responseBody(400, 'Email, OTP, new password, and confirm password are required', null)
+      );
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json(responseBody(400, 'Passwords do not match', null));
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json(
+        responseBody(400, 'Password must be at least 6 characters long', null)
+      );
+    }
+
+    const resetToken = await PasswordResetToken.findOne({
+      email: email.toLowerCase(),
+      otp: otp,
+      verified: true
+    });
+
+    if (!resetToken) {
+      return res.status(401).json(
+        responseBody(401, 'Invalid OTP or OTP not verified. Please verify OTP first', null)
+      );
+    }
+
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+    if (resetToken.verifiedAt < tenMinutesAgo) {
+      await PasswordResetToken.deleteOne({ _id: resetToken._id });
+      return res.status(401).json(
+        responseBody(401, 'Reset token expired. Please request a new OTP', null)
+      );
+    }
+
+    const user = await User.findById(resetToken.userId);
+    if (!user) {
+      return res.status(404).json(responseBody(404, 'User not found', null));
+    }
+
+    
+    user.password = newPassword;
+    await user.save();
+
+    await PasswordResetToken.deleteOne({ _id: resetToken._id });
+
+    await revokeRefreshToken(null, user._id);
+
+    return res.status(200).json(
+      responseBody(200, 'Password reset successfully. Please login with your new password', null)
+    );
+  } catch (err) {
+    console.error('Reset password error:', err);
+    return res.status(500).json(responseBody(500, 'Internal Server error', null));
+  }
+};
+
 module.exports = {
   registerUser,
   loginStepOne,
   loginStepTwo,
   refreshAccessToken,
   logout,
-  verifyEmail
+  verifyEmail,
+  forgotPassword,
+  verifyResetOTP,
+  resetPassword
 };

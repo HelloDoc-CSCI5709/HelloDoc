@@ -20,7 +20,8 @@ const APP_BASE_URL = process.env.APP_BASE_URL || 'http://localhost:5173';
 const EMAIL = {
   VERIFICATION_EXPIRATION: '1h',
   VERIFICATION_EXPIRATION_SECONDS: 3600,
-  VERIFICATION_SUBJECT: 'Verify your email address',
+  VERIFICATION_SUBJECT: 'Verify your email address - HelloDoc Team',
+  PASSWORD_RESET_SUBJECT: 'Password Reset OTP - HelloDoc Team',
   makeVerificationBody: (user, verifyUrl) => `
     Hi ${user.fullName},
 
@@ -30,13 +31,34 @@ const EMAIL = {
     This link will expire in ${EMAIL.VERIFICATION_EXPIRATION}.
 
     — HelloDoc Team
-  `
+  `,
+  makePasswordResetBody: (user, otp) => {
+    return `
+      Hello ${user.fullName},
+
+      You have requested to reset your password. Please use the following One-Time Password (OTP) to proceed with resetting your password:
+
+      Your OTP: ${otp}
+
+      This OTP will expire in 10 minutes for security reasons.
+
+      If you didn't request this password reset, please ignore this email or contact our support team if you have any concerns.
+
+      Best regards,
+      HelloDoc Team
+
+      ---
+      This is an automated message, please do not reply to this email.
+    `.trim();
+  }
+      
 };
 
+const smtpPort = parseInt(process.env.SMTP_PORT) || 587;
 const SMTP = {
   HOST: process.env.SMTP_HOST,
-  PORT: process.env.SMTP_PORT || 587,
-  SECURE: false,
+  PORT: smtpPort,
+  SECURE: smtpPort === 465,
   AUTH: {
     USER: process.env.SMTP_USER,
     PASS: process.env.SMTP_PASS

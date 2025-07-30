@@ -75,7 +75,6 @@ function Login() {
             },
           }));
 
-          // Updated dashboard routing
           const redirectPath = user.role === 'doctor'
             ? '/doctor-dashboard'
             : user.role === 'admin'
@@ -116,7 +115,6 @@ function Login() {
             },
           }));
 
-          // Updated dashboard routing
           const redirectPath = user.role === 'doctor'
             ? '/doctor-dashboard'
             : user.role === 'admin'

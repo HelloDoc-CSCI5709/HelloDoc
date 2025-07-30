@@ -370,8 +370,12 @@ const VideoCallPage: React.FC = () => {
           });
 
           try {
-            const log = await startLog(appointmentId, roomId).unwrap();
-            setLogId(log.logId);
+            if (appointmentId && roomId) {
+              const log = await startLog(appointmentId, roomId).unwrap();
+              setLogId(log.logId);
+            } else {
+              console.error('Log start failed: appointmentId or roomId is undefined');
+            }
           } catch (err) {
             console.error('Log start failed:', err);
           }
