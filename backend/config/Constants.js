@@ -16,7 +16,7 @@ const JWT = {
   REFRESH_EXPIRATION: 7 * 24 * 60 * 60,
   SECOND_FACTOR_EXPIRATION: '10m',
 };
-const APP_BASE_URL = process.env.APP_BASE_URL || 'http://localhost:5173';
+const APP_BASE_URL = process.env.APP_BASE_URL || 'https://hellodocprod.netlify.app/';
 const EMAIL = {
   VERIFICATION_EXPIRATION: '1h',
   VERIFICATION_EXPIRATION_SECONDS: 3600,

@@ -12,6 +12,7 @@ import {
   getPatientProfile 
 } from '../redux/actions/dashboardActions';
 import { getDoctorProfile } from '../redux/actions/doctorActions';
+import { BASE_URL } from '../constant_url';
 
 const DoctorDashboard: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -69,7 +70,7 @@ const DoctorDashboard: React.FC = () => {
       return path;
     }
     const filename = path.split('/').pop() || '';
-    return `http://localhost:8080/uploads/doctor-profiles/${filename}`;
+    return `${BASE_URL}/uploads/doctor-profiles/${filename}`;
   };
 
   return (

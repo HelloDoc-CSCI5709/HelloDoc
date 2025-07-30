@@ -1,4 +1,5 @@
 import React, { useState, type JSX } from 'react';
+import { BASE_URL } from '../../constant_url';
 interface Patient {
   fullName: string;
   gender: string;
@@ -88,7 +89,7 @@ const PatientDocumentUpload: React.FC<PatientDocumentUploadProps> = ({  document
     formData.append('file', file);
 
     try {
-      const res = await fetch(`http://localhost:5050${apiMap[key]}`, {
+      const res = await fetch(`${BASE_URL}${apiMap[key]}`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`

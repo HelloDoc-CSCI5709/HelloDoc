@@ -5,7 +5,7 @@ const PatientDocument = require('../models/PatientDocument');
 const HealthRecord = require('../models/HealthRecord');
 const { responseBody } = require('../config/responseBody');
 
-const BASE_URL = process.env.BASE_URL || 'http://localhost:5050';
+const BASE_URL = process.env.BASE_URL || 'https://hellodoc-prod.onrender.com';
 
 const getPatientProfile = async (req, res) => {
   try {
