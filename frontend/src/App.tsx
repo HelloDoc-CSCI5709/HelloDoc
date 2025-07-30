@@ -28,6 +28,8 @@ import "react-toastify/dist/ReactToastify.css";
 
 import ChatPage from './pages/ChatPage'
 
+import AllAppointments from './pages/AllAppointments'
+
 
 function App() {
   return (
@@ -50,6 +52,8 @@ function App() {
           <Route path="/verify-otp" element={<VerifyOtpPage />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/appointments" element={<AllAppointments />} />
+
           <Route path="/patient/book-appointment" element={<BookAppointment />} />
           {/*<Route path="/patient/appointments" element={<AppointmentsList />} />*/}
           {/*<Route path="/admin-dashboard" element={<AdminDashboard />} />*/}
