@@ -15,7 +15,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
   disabled = false
 }) => {
   const dispatch = useAppDispatch();
-  const { loading, profile } = useAppSelector(state => state.doctor);
+  const {profile } = useAppSelector(state => state.doctor);
   
   const [isUploading, setIsUploading] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(currentImage || null);

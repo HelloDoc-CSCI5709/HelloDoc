@@ -1,8 +1,36 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { BASE_URL } from '../../constant_url';
 
-// Use your existing fetchWithAuth function structure
-const fetchWithAuth = async <T>(url: string, options: RequestInit = {}): Promise<{ body: T }> => {
+interface Appointment {
+  id: string;
+  scheduledFor: string;
+  status: string;
+  isNewPatient?: boolean;
+  [key: string]: unknown;
+}
+
+interface PatientProfile {
+  id: string;
+  name: string;
+  [key: string]: unknown;
+}
+
+interface VideoRoom {
+  roomId: string;
+  token: string;
+  expiresAt: string;
+}
+
+interface DashboardStats {
+  totalVisits: number;
+  newPatients: number;
+  oldPatients: number;
+  todayAppointments: number;
+  pendingAppointments: number;
+  completedAppointments: number;
+}
+
+const fetchWithAuth = async <T>(url: string, options: globalThis.RequestInit = {}): Promise<{ body: T }> => {
   const token = localStorage.getItem('accessToken');
   const headers = {
     'Content-Type': 'application/json',
@@ -23,180 +51,169 @@ const fetchWithAuth = async <T>(url: string, options: RequestInit = {}): Promise
   return response.json();
 };
 
-// Get all appointments for the doctor
-export const getDoctorAppointments = createAsyncThunk(
+// Appointments
+export const getDoctorAppointments = createAsyncThunk<Appointment[]>(
   'dashboard/getDoctorAppointments',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await fetchWithAuth<any[]>('/appointments');
+      const response = await fetchWithAuth<Appointment[]>('/appointments');
       return response.body;
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to load appointments');
+    } catch (error: unknown) {
+      return rejectWithValue((error as Error).message || 'Failed to load appointments');
     }
   }
 );
 
-// Get today's appointments (filter from all appointments)
-export const getTodayAppointments = createAsyncThunk(
+export const getTodayAppointments = createAsyncThunk<Appointment[]>(
   'dashboard/getTodayAppointments',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await fetchWithAuth<any[]>('/appointments');
+      const response = await fetchWithAuth<Appointment[]>('/appointments');
       const today = new Date().toISOString().split('T')[0];
-      
-      // Filter appointments for today
-      const todayAppointments = response.body.filter(appointment => {
-        const appointmentDate = new Date(appointment.scheduledFor).toISOString().split('T')[0];
-        return appointmentDate === today;
+      const filtered = response.body.filter(apt => {
+        const aptDate = new Date(apt.scheduledFor).toISOString().split('T')[0];
+        return aptDate === today;
       });
-      
-      return todayAppointments;
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to load today\'s appointments');
+      return filtered;
+    } catch (error: unknown) {
+      return rejectWithValue((error as Error).message || 'Failed to load today\'s appointments');
     }
   }
 );
 
-// Get upcoming appointments for calendar
-export const getUpcomingAppointments = createAsyncThunk(
+export const getUpcomingAppointments = createAsyncThunk<Appointment[], { startDate: string; endDate: string }>(
   'dashboard/getUpcomingAppointments',
-  async ({ startDate, endDate }: { startDate: string; endDate: string }, { rejectWithValue }) => {
+  async ({ startDate, endDate }, { rejectWithValue }) => {
     try {
-      const response = await fetchWithAuth<any[]>('/appointments');
-      
-      // Filter appointments within date range
-      const upcomingAppointments = response.body.filter(appointment => {
-        const appointmentDate = new Date(appointment.scheduledFor).toISOString().split('T')[0];
-        return appointmentDate >= startDate && appointmentDate <= endDate;
+      const response = await fetchWithAuth<Appointment[]>('/appointments');
+      const filtered = response.body.filter(apt => {
+        const aptDate = new Date(apt.scheduledFor).toISOString().split('T')[0];
+        return aptDate >= startDate && aptDate <= endDate;
       });
-      
-      return upcomingAppointments;
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to load upcoming appointments');
+      return filtered;
+    } catch (error: unknown) {
+      return rejectWithValue((error as Error).message || 'Failed to load upcoming appointments');
     }
   }
 );
 
-// Get appointment by ID
-export const getAppointmentById = createAsyncThunk(
+export const getAppointmentById = createAsyncThunk<Appointment, string>(
   'dashboard/getAppointmentById',
-  async (appointmentId: string, { rejectWithValue }) => {
+  async (appointmentId, { rejectWithValue }) => {
     try {
-      const response = await fetchWithAuth<any>(`/appointments/${appointmentId}`);
+      const response = await fetchWithAuth<Appointment>(`/appointments/${appointmentId}`);
       return response.body;
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to load appointment details');
+    } catch (error: unknown) {
+      return rejectWithValue((error as Error).message || 'Failed to load appointment details');
     }
   }
 );
 
-// Cancel appointment
-export const cancelAppointment = createAsyncThunk(
+export const cancelAppointment = createAsyncThunk<Appointment, string>(
   'dashboard/cancelAppointment',
-  async (appointmentId: string, { rejectWithValue }) => {
+  async (appointmentId, { rejectWithValue }) => {
     try {
-      const response = await fetchWithAuth<any>(`/appointments/cancel/${appointmentId}`, {
+      const response = await fetchWithAuth<Appointment>(`/appointments/cancel/${appointmentId}`, {
         method: 'PUT',
       });
       return response.body;
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to cancel appointment');
+    } catch (error: unknown) {
+      return rejectWithValue((error as Error).message || 'Failed to cancel appointment');
     }
   }
 );
 
-// Reschedule appointment
-export const rescheduleAppointment = createAsyncThunk(
+export const rescheduleAppointment = createAsyncThunk<
+  Appointment,
+  { appointmentId: string; scheduledFor: string; reason?: string }
+>(
   'dashboard/rescheduleAppointment',
-  async ({ appointmentId, scheduledFor, reason }: { appointmentId: string; scheduledFor: string; reason?: string }, { rejectWithValue }) => {
+  async ({ appointmentId, scheduledFor, reason }, { rejectWithValue }) => {
     try {
-      const response = await fetchWithAuth<any>(`/appointments/reschedule/${appointmentId}`, {
+      const response = await fetchWithAuth<Appointment>(`/appointments/reschedule/${appointmentId}`, {
         method: 'PUT',
         body: JSON.stringify({ scheduledFor, reason }),
       });
       return response.body;
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to reschedule appointment');
+    } catch (error: unknown) {
+      return rejectWithValue((error as Error).message || 'Failed to reschedule appointment');
     }
   }
 );
 
-// Get patient profile (renamed from getDoctorPatients since you don't have patients API)
-export const getPatientProfile = createAsyncThunk(
+// Patient profile
+export const getPatientProfile = createAsyncThunk<PatientProfile, string>(
   'dashboard/getPatientProfile',
-  async (patientId: string, { rejectWithValue }) => {
+  async (_patientId, { rejectWithValue }) => {
     try {
-      const response = await fetchWithAuth<any>('/patient/profile');
+      const response = await fetchWithAuth<PatientProfile>('/patient/profile');
       return response.body;
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to load patient profile');
+    } catch (error: unknown) {
+      return rejectWithValue((error as Error).message || 'Failed to load patient profile');
     }
   }
 );
 
-// Video call actions
-export const createVideoRoom = createAsyncThunk(
+// Video call
+export const createVideoRoom = createAsyncThunk<VideoRoom, { appointmentId: string; expiresInMinutes?: number }>(
   'dashboard/createVideoRoom',
-  async ({ appointmentId, expiresInMinutes = 60 }: { appointmentId: string; expiresInMinutes?: number }, { rejectWithValue }) => {
+  async ({ appointmentId, expiresInMinutes = 60 }, { rejectWithValue }) => {
     try {
-      const response = await fetchWithAuth<any>('/video/room', {
+      const response = await fetchWithAuth<VideoRoom>('/video/room', {
         method: 'POST',
         body: JSON.stringify({ appointmentId, expiresInMinutes }),
       });
       return response.body;
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to create video room');
+    } catch (error: unknown) {
+      return rejectWithValue((error as Error).message || 'Failed to create video room');
     }
   }
 );
 
-export const getVideoRoomToken = createAsyncThunk(
+export const getVideoRoomToken = createAsyncThunk<VideoRoom, string>(
   'dashboard/getVideoRoomToken',
-  async (appointmentId: string, { rejectWithValue }) => {
+  async (appointmentId, { rejectWithValue }) => {
     try {
-      const response = await fetchWithAuth<any>(`/video/token/${appointmentId}`);
+      const response = await fetchWithAuth<VideoRoom>(`/video/token/${appointmentId}`);
       return response.body;
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to get video room token');
+    } catch (error: unknown) {
+      return rejectWithValue((error as Error).message || 'Failed to get video room token');
     }
   }
 );
 
-// Generate dashboard stats from appointment data
-export const getDashboardStats = createAsyncThunk(
+// Dashboard stats
+export const getDashboardStats = createAsyncThunk<DashboardStats>(
   'dashboard/getDashboardStats',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await fetchWithAuth<any[]>('/appointments');
+      const response = await fetchWithAuth<Appointment[]>('/appointments');
       const appointments = response.body;
-      
+
       const today = new Date();
       const todayString = today.toISOString().split('T')[0];
       const thisMonth = today.getMonth();
       const thisYear = today.getFullYear();
-      
-      // Calculate statistics
-      const todayAppointments = appointments.filter(apt => 
+
+      const todayAppointments = appointments.filter(apt =>
         new Date(apt.scheduledFor).toISOString().split('T')[0] === todayString
       );
-      
+
       const thisMonthAppointments = appointments.filter(apt => {
         const aptDate = new Date(apt.scheduledFor);
         return aptDate.getMonth() === thisMonth && aptDate.getFullYear() === thisYear;
       });
-      
-      const stats = {
+
+      return {
         totalVisits: thisMonthAppointments.length,
-        newPatients: thisMonthAppointments.filter(apt => apt.isNewPatient || false).length,
+        newPatients: thisMonthAppointments.filter(apt => apt.isNewPatient).length,
         oldPatients: thisMonthAppointments.filter(apt => !apt.isNewPatient).length,
         todayAppointments: todayAppointments.length,
         pendingAppointments: appointments.filter(apt => apt.status === 'scheduled').length,
         completedAppointments: appointments.filter(apt => apt.status === 'completed').length,
       };
-      
-      return stats;
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to calculate dashboard stats');
+    } catch (error: unknown) {
+      return rejectWithValue((error as Error).message || 'Failed to calculate dashboard stats');
     }
   }
 );

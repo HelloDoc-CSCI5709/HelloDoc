@@ -30,12 +30,10 @@ const AvailabilitySection: React.FC<AvailabilitySectionProps> = ({ doctorId }) =
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
-  // Load existing availability on mount
   useEffect(() => {
     dispatch(getAvailability({ doctorId: doctorId || undefined }));
   }, [dispatch, doctorId]);
 
-  // Populate slots from Redux state
   useEffect(() => {
     if (availability && availability.length > 0) {
       const availabilitySlots: AvailabilitySlot[] = availability.map(slot => ({
@@ -51,7 +49,6 @@ const AvailabilitySection: React.FC<AvailabilitySectionProps> = ({ doctorId }) =
     }
   }, [availability]);
 
-  // Handle success/error states
   useEffect(() => {
     if (success && !loading && isSubmitting) {
       toast.success('Availability updated successfully!');
@@ -92,26 +89,21 @@ const AvailabilitySection: React.FC<AvailabilitySectionProps> = ({ doctorId }) =
     setIsSubmitting(true);
 
     try {
-      // Group slots by month and year to handle backend constraint
       const slotsByMonth = slots.reduce((acc, slot) => {
         const date = new Date(slot.start);
-        const monthYear = `${date.getFullYear()}-${date.getMonth()}`;
-        
-        if (!acc[monthYear]) {
-          acc[monthYear] = [];
-        }
-        acc[monthYear].push(slot);
+        const key = `${date.getFullYear()}-${date.getMonth()}`;
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(slot);
         return acc;
       }, {} as Record<string, AvailabilitySlot[]>);
 
-      // Submit each month separately
       const monthGroups = Object.entries(slotsByMonth);
-      
+
       if (monthGroups.length > 1) {
         toast.info(`Submitting ${monthGroups.length} months of availability separately.`);
       }
 
-      for (const [monthYear, monthSlots] of monthGroups) {
+      for (const [, monthSlots] of monthGroups) {
         const availabilityData = monthSlots.map(slot => ({
           _id: slot.id || '',
           doctorId: doctorId || '',
@@ -126,7 +118,6 @@ const AvailabilitySection: React.FC<AvailabilitySectionProps> = ({ doctorId }) =
       }
 
       toast.success('All availability slots updated successfully!');
-
     } catch (err) {
       console.error('Availability update failed:', err);
       toast.error('Failed to update availability. Please try again.');
@@ -142,7 +133,6 @@ const AvailabilitySection: React.FC<AvailabilitySectionProps> = ({ doctorId }) =
   };
 
   const handleSlotClick = (slot: AvailabilitySlot) => {
-    console.log('Slot clicked:', slot);
     toast.info(`Clicked: ${slot.title} on ${slot.start.toLocaleDateString()}`);
   };
 
@@ -151,12 +141,12 @@ const AvailabilitySection: React.FC<AvailabilitySectionProps> = ({ doctorId }) =
     const slotsOnDate = slots.filter(slot => 
       slot.start.toDateString() === date.toDateString()
     );
-    
-    if (slotsOnDate.length > 0) {
-      toast.info(`${slotsOnDate.length} availability slots on ${date.toLocaleDateString()}`);
-    } else {
-      toast.info(`No availability slots on ${date.toLocaleDateString()}`);
-    }
+
+    toast.info(
+      slotsOnDate.length > 0
+        ? `${slotsOnDate.length} availability slot(s) on ${date.toLocaleDateString()}`
+        : `No availability slots on ${date.toLocaleDateString()}`
+    );
   };
 
   if (loading && slots.length === 0) {
@@ -175,7 +165,6 @@ const AvailabilitySection: React.FC<AvailabilitySectionProps> = ({ doctorId }) =
         <p className="text-gray-600">Upload ICS files or manage your availability slots</p>
       </div>
 
-      {/* ICS File Upload */}
       <div className="mb-8">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">Upload Calendar File</h3>
         <ICSFileUpload
@@ -185,9 +174,7 @@ const AvailabilitySection: React.FC<AvailabilitySectionProps> = ({ doctorId }) =
         />
       </div>
 
-      {/* Current Availability Slots */}
       <div className="mb-6">
-        {/* View Mode Toggle */}
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-800">
             Current Availability ({slots.length} slots)
@@ -196,21 +183,13 @@ const AvailabilitySection: React.FC<AvailabilitySectionProps> = ({ doctorId }) =
             <div className="flex bg-gray-100 rounded-lg p-1">
               <button
                 onClick={() => setViewMode('list')}
-                className={`px-3 py-1 rounded text-sm ${
-                  viewMode === 'list' 
-                    ? 'bg-white text-gray-900 shadow-sm' 
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
+                className={`px-3 py-1 rounded text-sm ${viewMode === 'list' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
               >
                 List View
               </button>
               <button
                 onClick={() => setViewMode('calendar')}
-                className={`px-3 py-1 rounded text-sm ${
-                  viewMode === 'calendar' 
-                    ? 'bg-white text-gray-900 shadow-sm' 
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
+                className={`px-3 py-1 rounded text-sm ${viewMode === 'calendar' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
               >
                 Calendar View
               </button>
@@ -255,27 +234,24 @@ const AvailabilitySection: React.FC<AvailabilitySectionProps> = ({ doctorId }) =
         )}
       </div>
 
-      {/* Selected Date Info (only in calendar view) */}
       {viewMode === 'calendar' && selectedDate && (
         <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <h4 className="font-medium text-blue-900 mb-2">
-            {selectedDate.toLocaleDateString('en-US', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
+            {selectedDate.toLocaleDateString('en-US', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
             })}
           </h4>
           {(() => {
-            const daySlots = slots.filter(slot => 
+            const daySlots = slots.filter(slot =>
               slot.start.toDateString() === selectedDate.toDateString()
             );
-            
-            if (daySlots.length === 0) {
-              return <p className="text-blue-700 text-sm">No availability slots on this date</p>;
-            }
-            
-            return (
+
+            return daySlots.length === 0 ? (
+              <p className="text-blue-700 text-sm">No availability slots on this date</p>
+            ) : (
               <div className="space-y-2">
                 <p className="text-blue-700 text-sm font-medium">
                   {daySlots.length} availability slot{daySlots.length > 1 ? 's' : ''}:
@@ -293,13 +269,11 @@ const AvailabilitySection: React.FC<AvailabilitySectionProps> = ({ doctorId }) =
         </div>
       )}
 
-      {/* Save Actions */}
       {hasChanges && (
         <div className="flex justify-end space-x-4 pt-6 border-t">
           <button
             type="button"
             onClick={() => {
-              // Reload from server
               dispatch(getAvailability({ doctorId: doctorId || undefined }));
               setHasChanges(false);
               setSelectedDate(null);

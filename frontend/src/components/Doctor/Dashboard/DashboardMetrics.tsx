@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrendingUp, TrendingDown, Users, Calendar, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { TrendingUp, TrendingDown, Users, Calendar, Clock, CheckCircle, } from 'lucide-react';
 
 interface MetricCardProps {
   title: string;

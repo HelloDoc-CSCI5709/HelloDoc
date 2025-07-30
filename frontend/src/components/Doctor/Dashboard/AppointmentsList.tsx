@@ -28,42 +28,39 @@ const AppointmentsList: React.FC<AppointmentsListProps> = ({ appointments, onPat
       try {
         await dispatch(cancelAppointment(appointmentId)).unwrap();
         toast.success('Appointment cancelled successfully');
-      } catch (error: any) {
-        toast.error(`Failed to cancel appointment: ${error}`);
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        toast.error(`Failed to cancel appointment: ${message}`);
       }
     }
   };
 
   const handleJoinVideoCall = async (appointmentId: string) => {
     try {
-      // First, try to get existing video room token
       try {
         const tokenResponse = await dispatch(getVideoRoomToken(appointmentId)).unwrap();
         if (tokenResponse.token) {
-          // Open video call in new window/tab
           window.open(tokenResponse.joinUrl || tokenResponse.roomUrl, '_blank');
           return;
         }
-      } catch (tokenError) {
-        // If no existing room, create a new one
+      } catch {
         console.log('No existing room, creating new one...');
       }
 
-      // Create new video room
-      const roomResponse = await dispatch(createVideoRoom({ 
-        appointmentId, 
-        expiresInMinutes: 60 
+      const roomResponse = await dispatch(createVideoRoom({
+        appointmentId,
+        expiresInMinutes: 60
       })).unwrap();
-      
+
       if (roomResponse.joinUrl || roomResponse.roomUrl) {
         window.open(roomResponse.joinUrl || roomResponse.roomUrl, '_blank');
         toast.success('Video call started successfully');
       } else {
         toast.error('Unable to start video call');
       }
-    } catch (error: any) {
-      console.error('Video call error:', error);
-      toast.error(`Failed to start video call: ${error}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      toast.error(`Failed to start video call: ${message}`);
     }
   };
 
@@ -132,7 +129,7 @@ const AppointmentsList: React.FC<AppointmentsListProps> = ({ appointments, onPat
           <ChevronDown className="w-4 h-4 text-gray-400" />
         </div>
       </div>
-      
+
       <div className="p-4">
         {appointments.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
@@ -170,7 +167,7 @@ const AppointmentsList: React.FC<AppointmentsListProps> = ({ appointments, onPat
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="text-right">
                     <div className="flex items-center space-x-2 mb-2">
                       <Clock className="w-4 h-4 text-gray-400" />
@@ -181,8 +178,7 @@ const AppointmentsList: React.FC<AppointmentsListProps> = ({ appointments, onPat
                     <p className="text-xs text-gray-500 mb-3">
                       {formatDate(appointment.scheduledFor)}
                     </p>
-                    
-                    {/* Action Buttons */}
+
                     <div className="flex space-x-2">
                       {appointment.status === 'scheduled' && isUpcoming(appointment.scheduledFor) && (
                         <>
@@ -203,7 +199,6 @@ const AppointmentsList: React.FC<AppointmentsListProps> = ({ appointments, onPat
                           </button>
                         </>
                       )}
-                      
                       {onPatientSelect && (
                         <button
                           onClick={() => onPatientSelect(appointment.patientId)}

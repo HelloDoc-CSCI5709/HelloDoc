@@ -1,4 +1,7 @@
+/* global google */
 import React, { useEffect, useRef } from 'react';
+
+/// <reference types="google.maps" />
 
 interface MapPreviewProps {
   coordinates?: {
@@ -21,18 +24,14 @@ const MapPreview: React.FC<MapPreviewProps> = ({
   interactive = false
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<any>(null);
-  const markerRef = useRef<any>(null);
+  const mapInstanceRef = useRef<google.maps.Map | null>(null);
+  const markerRef = useRef<google.maps.Marker | null>(null);
 
   useEffect(() => {
-    if (!mapRef.current || !window.google || !window.google.maps) {
-      return;
-    }
+    if (!mapRef.current || !window.google || !window.google.maps) return;
 
-    // Default to a center location if no coordinates provided
-    const defaultCenter = coordinates || { lat: 40.7128, lng: -74.0060 }; // New York
+    const defaultCenter = coordinates || { lat: 40.7128, lng: -74.0060 }; // Fallback: NYC
 
-    // Initialize map
     mapInstanceRef.current = new window.google.maps.Map(mapRef.current, {
       zoom,
       center: defaultCenter,
@@ -43,7 +42,6 @@ const MapPreview: React.FC<MapPreviewProps> = ({
       disableDoubleClickZoom: !interactive,
     });
 
-    // Add marker if coordinates are provided
     if (coordinates) {
       markerRef.current = new window.google.maps.Marker({
         position: coordinates,
@@ -52,39 +50,37 @@ const MapPreview: React.FC<MapPreviewProps> = ({
         animation: window.google.maps.Animation.DROP,
       });
 
-      // Add info window
       if (address) {
         const infoWindow = new window.google.maps.InfoWindow({
           content: `<div style="padding: 5px;"><strong>Practice Location</strong><br/>${address}</div>`,
         });
 
         markerRef.current.addListener('click', () => {
-          infoWindow.open(mapInstanceRef.current, markerRef.current);
+          infoWindow.open(mapInstanceRef.current!, markerRef.current!);
         });
       }
     }
 
-    // Add click listener for interactive maps
     if (interactive && onMapClick) {
-      mapInstanceRef.current.addListener('click', (event: any) => {
-        const lat = event.latLng.lat();
-        const lng = event.latLng.lng();
-        onMapClick({ lat, lng });
-        
-        // Move marker to clicked location
-        if (markerRef.current) {
-          markerRef.current.setPosition({ lat, lng });
-        } else {
-          markerRef.current = new window.google.maps.Marker({
-            position: { lat, lng },
-            map: mapInstanceRef.current,
-            animation: window.google.maps.Animation.DROP,
-          });
+      mapInstanceRef.current.addListener('click', (event: google.maps.MapMouseEvent) => {
+        if (event.latLng) {
+          const lat = event.latLng.lat();
+          const lng = event.latLng.lng();
+          onMapClick({ lat, lng });
+
+          if (markerRef.current) {
+            markerRef.current.setPosition({ lat, lng });
+          } else {
+            markerRef.current = new window.google.maps.Marker({
+              position: { lat, lng },
+              map: mapInstanceRef.current!,
+              animation: window.google.maps.Animation.DROP,
+            });
+          }
         }
       });
     }
 
-    // Cleanup function
     return () => {
       if (markerRef.current) {
         markerRef.current.setMap(null);
@@ -92,11 +88,10 @@ const MapPreview: React.FC<MapPreviewProps> = ({
     };
   }, [coordinates, address, zoom, interactive, onMapClick]);
 
-  // Update map when coordinates change
   useEffect(() => {
     if (mapInstanceRef.current && coordinates) {
       mapInstanceRef.current.setCenter(coordinates);
-      
+
       if (markerRef.current) {
         markerRef.current.setPosition(coordinates);
       } else {
@@ -112,7 +107,7 @@ const MapPreview: React.FC<MapPreviewProps> = ({
 
   if (!window.google || !window.google.maps) {
     return (
-      <div 
+      <div
         className="flex items-center justify-center bg-gray-100 border border-gray-300 rounded-lg"
         style={{ height }}
       >

@@ -11,7 +11,6 @@ interface CredentialUploadProps {
 
 const CredentialUpload: React.FC<CredentialUploadProps> = ({
   onFileSelected,
-  onUploadComplete,
   disabled = false,
   isUploading = false
 }) => {

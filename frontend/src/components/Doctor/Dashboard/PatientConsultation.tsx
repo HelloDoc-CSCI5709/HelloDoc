@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Clock, Calendar, FileText, Pill } from 'lucide-react';
+import { Clock, Calendar, FileText, Pill } from 'lucide-react';
 
 interface Patient {
   id: string;

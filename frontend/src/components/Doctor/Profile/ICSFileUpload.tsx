@@ -2,7 +2,15 @@ import React, { useState, useRef } from 'react';
 import { toast } from 'react-toastify';
 import { ICSParser } from './icsParser';
 
-// Define all interfaces locally to avoid import issues
+// Define ICS event and availability types
+interface ICSEvent {
+  summary: string;
+  start: Date | string;
+  end: Date | string;
+  location?: string;
+  description?: string;
+}
+
 interface AvailabilitySlot {
   id?: string;
   title: string;
@@ -15,7 +23,7 @@ interface AvailabilitySlot {
 
 interface ICSFileData {
   file: File;
-  events: any[];
+  events: ICSEvent[];
   totalSlots: number;
   dateRange: {
     start: Date;
@@ -42,13 +50,11 @@ const ICSFileUpload: React.FC<ICSFileUploadProps> = ({
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.name.toLowerCase().endsWith('.ics')) {
       onError('Please select a valid ICS calendar file');
       return;
     }
 
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       onError('File size must be less than 5MB');
       return;
@@ -60,11 +66,9 @@ const ICSFileUpload: React.FC<ICSFileUploadProps> = ({
       const icsData = await ICSParser.parseICSFile(file);
       setFileInfo(icsData);
 
-      // Convert ICS events to availability slots with proper Date handling
       const slots: AvailabilitySlot[] = icsData.events.map((event, index) => ({
         id: `ics-${index}`,
         title: event.summary,
-        // Ensure we have proper Date objects for UI display
         start: event.start instanceof Date ? event.start : new Date(event.start),
         end: event.end instanceof Date ? event.end : new Date(event.end),
         location: event.location,
@@ -94,9 +98,7 @@ const ICSFileUpload: React.FC<ICSFileUploadProps> = ({
     <div className="space-y-4">
       <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
         <div className="text-center">
-          <div className="mx-auto h-12 w-12 text-gray-400 mb-4">
-            📅
-          </div>
+          <div className="mx-auto h-12 w-12 text-gray-400 mb-4">📅</div>
           <div className="mb-4">
             <label
               htmlFor="ics-upload"

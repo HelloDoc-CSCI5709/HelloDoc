@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 
+/// <reference types="google.maps" />
+
 declare global {
   interface Window {
-    google: any;
+    google: typeof window.google;
     initMap: () => void;
   }
 }
@@ -12,15 +14,12 @@ export const useGoogleMaps = (apiKey: string) => {
   const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check if Google Maps is already loaded
     if (window.google && window.google.maps) {
       setIsLoaded(true);
       return;
     }
 
-    // Check if script is already being loaded
     if (document.querySelector('script[src*="maps.googleapis.com"]')) {
-      // Wait for it to load
       const checkLoaded = setInterval(() => {
         if (window.google && window.google.maps) {
           setIsLoaded(true);
@@ -30,7 +29,6 @@ export const useGoogleMaps = (apiKey: string) => {
       return;
     }
 
-    // Create and load the script
     const script = document.createElement('script');
     script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
     script.async = true;
@@ -46,7 +44,6 @@ export const useGoogleMaps = (apiKey: string) => {
 
     document.head.appendChild(script);
 
-    // Cleanup function
     return () => {
       const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
       if (existingScript) {

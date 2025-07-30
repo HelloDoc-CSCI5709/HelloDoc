@@ -1,3 +1,5 @@
+/// <reference types="google.maps" />
+
 interface Coordinates {
   lat: number;
   lng: number;
@@ -20,9 +22,9 @@ export class GeocodingUtils {
       }
 
       const geocoder = new window.google.maps.Geocoder();
-      
-      geocoder.geocode({ address }, (results: any, status: any) => {
-        if (status === 'OK' && results[0]) {
+
+      geocoder.geocode({ address }, (results, status) => {
+        if (status === 'OK' && results && results[0]) {
           const result = results[0];
           resolve({
             address,
@@ -51,9 +53,9 @@ export class GeocodingUtils {
 
       const geocoder = new window.google.maps.Geocoder();
       const latLng = new window.google.maps.LatLng(coordinates.lat, coordinates.lng);
-      
-      geocoder.geocode({ location: latLng }, (results: any, status: any) => {
-        if (status === 'OK' && results[0]) {
+
+      geocoder.geocode({ location: latLng }, (results, status) => {
+        if (status === 'OK' && results && results[0]) {
           resolve(results[0].formatted_address);
         } else {
           console.error('Reverse geocoding failed:', status);
@@ -63,17 +65,17 @@ export class GeocodingUtils {
     });
   }
 
-  static calculateDistance(point1: Coordinates, point2: Coordinates): number {
+  static async calculateDistance(point1: Coordinates, point2: Coordinates): Promise<number> {
     if (!window.google || !window.google.maps) {
-      // Fallback to Haversine formula
-      const R = 6371; // Earth's radius in km
+      // Haversine fallback
+      const R = 6371;
       const dLat = this.toRadians(point2.lat - point1.lat);
       const dLng = this.toRadians(point2.lng - point1.lng);
-      const a = 
-        Math.sin(dLat/2) * Math.sin(dLat/2) +
-        Math.cos(this.toRadians(point1.lat)) * Math.cos(this.toRadians(point2.lat)) * 
-        Math.sin(dLng/2) * Math.sin(dLng/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      const a =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos(this.toRadians(point1.lat)) * Math.cos(this.toRadians(point2.lat)) *
+        Math.sin(dLng / 2) ** 2;
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       return R * c;
     }
 
@@ -86,11 +88,12 @@ export class GeocodingUtils {
         unitSystem: window.google.maps.UnitSystem.METRIC,
         avoidHighways: false,
         avoidTolls: false,
-      }, (response: any, status: any) => {
-        if (status === 'OK') {
-          const distance = response.rows[0].elements[0].distance.value / 1000; // Convert to km
+      }, (response, status) => {
+        if (status === 'OK' && response.rows[0]?.elements[0]?.distance?.value != null) {
+          const distance = response.rows[0].elements[0].distance.value / 1000;
           resolve(distance);
         } else {
+          console.error('Distance calculation failed:', status);
           resolve(0);
         }
       });

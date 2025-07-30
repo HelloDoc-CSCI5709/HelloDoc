@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Search, Bell } from 'lucide-react';
 import DoctorSidebar from '../components/Doctor/DoctorSidebar';
-import StatsCard from '../components/Doctor/Dashboard/StatsCard';
 import AppointmentsList from '../components/Doctor/Dashboard/AppointmentsList';
 import AppointmentCalendar from '../components/Doctor/Dashboard/AppointmentCalendar';
 import DashboardMetrics from '../components/Doctor/Dashboard/DashboardMetrics';

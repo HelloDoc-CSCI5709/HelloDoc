@@ -8,25 +8,6 @@ import {
   getDoctorCredentials 
 } from '../../../redux/actions/doctorActions';
 
-// Define credential interface locally to avoid import issues
-interface DoctorCredential {
-  _id: string;
-  id: string;
-  doctorId: string;
-  fileName: string;
-  documentType: string;
-  doctorEmail: string;
-  doctorName: string;
-  doctorProfilePicture: string;
-  status: 'Pending' | 'Approved' | 'Rejected';
-  adminId?: string;
-  submittedAt: Date;
-  reviewedAt?: Date;
-  reason?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
-
 interface CredentialSectionProps {
   doctorId?: string;
 }
@@ -39,12 +20,10 @@ const CredentialSection: React.FC<CredentialSectionProps> = ({ doctorId }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  // Helper function to decode JWT token and get doctor ID
   const getDoctorIdFromToken = () => {
     try {
       const token = localStorage.getItem('accessToken');
       if (!token) return null;
-      
       const payload = JSON.parse(atob(token.split('.')[1]));
       return payload.doctorId || payload.userId || payload.id;
     } catch (error) {
@@ -53,7 +32,6 @@ const CredentialSection: React.FC<CredentialSectionProps> = ({ doctorId }) => {
     }
   };
 
-  // Enhanced doctor ID retrieval with multiple fallback sources
   const getCurrentDoctorId = () => {
     const sources = [
       getDoctorIdFromToken(),
@@ -76,22 +54,18 @@ const CredentialSection: React.FC<CredentialSectionProps> = ({ doctorId }) => {
 
   const currentDoctorId = getCurrentDoctorId();
 
-  // Load existing credentials on mount
   useEffect(() => {
     if (currentDoctorId) {
       dispatch(getDoctorCredentials(currentDoctorId));
     }
   }, [dispatch, currentDoctorId]);
 
-  // Handle success/error states
   useEffect(() => {
     if (success && !loading && isUploading) {
       toast.success('Credential uploaded successfully!');
       setIsUploading(false);
       setSelectedFile(null);
       setUploadProgress(0);
-      
-      // Reload credentials
       if (currentDoctorId) {
         dispatch(getDoctorCredentials(currentDoctorId));
       }
@@ -125,7 +99,6 @@ const CredentialSection: React.FC<CredentialSectionProps> = ({ doctorId }) => {
     setUploadProgress(0);
 
     try {
-      // Simulate upload progress
       const progressInterval = setInterval(() => {
         setUploadProgress(prev => {
           if (prev >= 90) {
@@ -137,23 +110,26 @@ const CredentialSection: React.FC<CredentialSectionProps> = ({ doctorId }) => {
       }, 200);
 
       try {
-        const result = await dispatch(submitDoctorCredential({
+        await dispatch(submitDoctorCredential({
           doctorId: currentDoctorId,
           file: selectedFile
         })).unwrap();
-        
+
         clearInterval(progressInterval);
         setUploadProgress(100);
-        
-      } catch (apiError) {
+      } catch (apiError: unknown) {
         console.error('Credential upload failed:', apiError);
         clearInterval(progressInterval);
         setUploadProgress(0);
-        
-        if (apiError.message && apiError.message.includes('body')) {
-          toast.error('Upload completed but response format unexpected. Please check if the file was uploaded successfully.');
+
+        if (apiError instanceof Error) {
+          if (apiError.message.includes('body')) {
+            toast.error('Upload completed but response format unexpected. Please check if the file was uploaded successfully.');
+          } else {
+            toast.error(`Upload failed: ${apiError.message}`);
+          }
         } else {
-          toast.error(`Upload failed: ${apiError.message || 'Unknown error'}`);
+          toast.error('Upload failed: Unexpected error occurred');
         }
       }
 
@@ -172,7 +148,6 @@ const CredentialSection: React.FC<CredentialSectionProps> = ({ doctorId }) => {
     );
   }
 
-  // Convert credentials to array format for consistent handling
   const credentialsList = Array.isArray(credentials) ? credentials : 
                          credentials ? [credentials] : [];
 
@@ -183,18 +158,15 @@ const CredentialSection: React.FC<CredentialSectionProps> = ({ doctorId }) => {
         <p className="text-gray-600">Upload your medical credentials for verification</p>
       </div>
 
-      {/* Upload Section */}
       <div className="mb-8">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">Upload New Credential</h3>
         
         <CredentialUpload
           onFileSelected={handleFileSelected}
-          onUploadComplete={() => setSelectedFile(null)}
           disabled={isUploading}
           isUploading={isUploading}
         />
 
-        {/* Upload Progress */}
         {isUploading && (
           <div className="mt-4">
             <div className="flex justify-between text-sm text-gray-600 mb-1">
@@ -210,7 +182,6 @@ const CredentialSection: React.FC<CredentialSectionProps> = ({ doctorId }) => {
           </div>
         )}
 
-        {/* Upload Button */}
         {selectedFile && !isUploading && (
           <div className="mt-4 flex justify-end">
             <button
@@ -224,7 +195,6 @@ const CredentialSection: React.FC<CredentialSectionProps> = ({ doctorId }) => {
         )}
       </div>
 
-      {/* Credentials List */}
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">
           Your Credentials ({credentialsList.length})

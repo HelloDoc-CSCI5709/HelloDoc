@@ -1,3 +1,4 @@
+/* global google */
 import React, { useState, useRef, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { GeocodingUtils } from '../../../utils/geocodingUtils';
@@ -39,15 +40,14 @@ const AddressForm: React.FC<AddressFormProps> = ({
   });
 
   const [isGeocoding, setIsGeocoding] = useState(false);
-  const autocompleteRef = useRef<any>(null);
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Initialize Google Places Autocomplete
   useEffect(() => {
     if (window.google && window.google.maps && inputRef.current && !autocompleteRef.current) {
       autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
         types: ['address'],
-        componentRestrictions: { country: ['us', 'ca'] } // Restrict to US and Canada
+        componentRestrictions: { country: ['us', 'ca'] }
       });
 
       autocompleteRef.current.addListener('place_changed', handlePlaceSelect);
@@ -55,14 +55,12 @@ const AddressForm: React.FC<AddressFormProps> = ({
   }, []);
 
   const handlePlaceSelect = () => {
-    const place = autocompleteRef.current.getPlace();
-    
-    if (!place.geometry) {
+    const place = autocompleteRef.current?.getPlace();
+    if (!place || !place.geometry) {
       toast.error('No details available for this address');
       return;
     }
 
-    // Parse address components
     const addressComponents = place.address_components || [];
     let street = '';
     let city = '';
@@ -70,9 +68,9 @@ const AddressForm: React.FC<AddressFormProps> = ({
     let zipCode = '';
     let country = '';
 
-    addressComponents.forEach((component: any) => {
+    addressComponents.forEach((component: google.maps.GeocoderAddressComponent) => {
       const types = component.types;
-      
+
       if (types.includes('street_number') || types.includes('route')) {
         street += component.long_name + ' ';
       } else if (types.includes('locality')) {
@@ -110,17 +108,15 @@ const AddressForm: React.FC<AddressFormProps> = ({
 
   const handleGeocodeAddress = async () => {
     const addressString = `${formData.street}, ${formData.city}, ${formData.state} ${formData.zipCode}, ${formData.country}`;
-    
+
     if (!addressString.trim()) {
       toast.error('Please enter a complete address');
       return;
     }
 
     setIsGeocoding(true);
-
     try {
       const result = await GeocodingUtils.geocodeAddress(addressString);
-      
       if (result) {
         setFormData(prev => ({
           ...prev,
@@ -142,7 +138,6 @@ const AddressForm: React.FC<AddressFormProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate required fields
     if (!formData.street || !formData.city || !formData.state) {
       toast.error('Please fill in all required address fields');
       return;
@@ -158,7 +153,6 @@ const AddressForm: React.FC<AddressFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Google Places Autocomplete */}
       <div className="space-y-2">
         <label className="block text-sm font-medium text-gray-700">
           Search Address <span className="text-red-500">*</span>
@@ -169,12 +163,9 @@ const AddressForm: React.FC<AddressFormProps> = ({
           placeholder="Start typing your practice address..."
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-        <p className="text-sm text-gray-500">
-          Start typing and select from the dropdown for best results
-        </p>
+        <p className="text-sm text-gray-500">Start typing and select from the dropdown for best results</p>
       </div>
 
-      {/* Manual Address Fields */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="md:col-span-2">
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -251,7 +242,6 @@ const AddressForm: React.FC<AddressFormProps> = ({
         </div>
       </div>
 
-      {/* Verify Address Button */}
       <div className="flex justify-center">
         <button
           type="button"
@@ -266,7 +256,6 @@ const AddressForm: React.FC<AddressFormProps> = ({
         </button>
       </div>
 
-      {/* Verified Address Display */}
       {formData.fullAddress && formData.coordinates && (
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
           <h4 className="font-medium text-green-800 mb-2">✅ Address Verified</h4>
@@ -279,7 +268,6 @@ const AddressForm: React.FC<AddressFormProps> = ({
         </div>
       )}
 
-      {/* Form Actions */}
       <div className="flex justify-end space-x-4 pt-6 border-t">
         <button
           type="button"

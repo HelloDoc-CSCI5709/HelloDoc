@@ -25,32 +25,26 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
 }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
-  // Get calendar data for the current month
   const calendarData = useMemo(() => {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
-    
-    // Get first day of month and how many days in month
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay(); // 0 = Sunday
-    
-    // Generate calendar days
+    const startingDayOfWeek = firstDay.getDay();
+
     const days = [];
-    
-    // Add empty cells for days before the first day of month
+
     for (let i = 0; i < startingDayOfWeek; i++) {
       days.push(null);
     }
-    
-    // Add days of the month
+
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(year, month, day);
-      const daySlots = slots.filter(slot => 
+      const daySlots = slots.filter(slot =>
         slot.start.toDateString() === date.toDateString()
       );
-      
+
       days.push({
         date,
         day,
@@ -59,7 +53,7 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
         isSelected: selectedDate?.toDateString() === date.toDateString()
       });
     }
-    
+
     return days;
   }, [currentMonth, slots, selectedDate]);
 
@@ -82,12 +76,6 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
     }).format(date);
   };
 
-  const getSlotsForDate = (date: Date) => {
-    return slots.filter(slot => 
-      slot.start.toDateString() === date.toDateString()
-    );
-  };
-
   const handleDateClick = (date: Date) => {
     if (onDateClick) {
       onDateClick(date);
@@ -96,7 +84,6 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
 
   return (
     <div className="bg-white rounded-lg border border-gray-200">
-      {/* Calendar Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200">
         <button
           onClick={() => navigateMonth('prev')}
@@ -106,11 +93,11 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        
+
         <h2 className="text-lg font-semibold text-gray-900">
           {formatMonthYear(currentMonth)}
         </h2>
-        
+
         <button
           onClick={() => navigateMonth('next')}
           className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -121,7 +108,6 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
         </button>
       </div>
 
-      {/* Days of Week Header */}
       <div className="grid grid-cols-7 border-b border-gray-200">
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
           <div key={day} className="p-3 text-center text-sm font-medium text-gray-700 bg-gray-50">
@@ -130,7 +116,6 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
         ))}
       </div>
 
-      {/* Calendar Grid */}
       <div className="grid grid-cols-7">
         {calendarData.map((dayData, index) => (
           <div
@@ -142,7 +127,6 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
           >
             {dayData && (
               <>
-                {/* Date Number */}
                 <div className={`text-sm font-medium mb-1 ${
                   dayData.isToday 
                     ? 'text-blue-600 font-bold' 
@@ -158,7 +142,6 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
                   )}
                 </div>
 
-                {/* Availability Slots */}
                 <div className="space-y-1">
                   {dayData.slots.slice(0, 3).map((slot, slotIndex) => (
                     <div
@@ -177,8 +160,7 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
                       {slot.start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} {slot.title}
                     </div>
                   ))}
-                  
-                  {/* Show more indicator */}
+
                   {dayData.slots.length > 3 && (
                     <div className="text-xs text-gray-500 text-center">
                       +{dayData.slots.length - 3} more
@@ -191,7 +173,6 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
         ))}
       </div>
 
-      {/* Legend */}
       <div className="p-4 border-t border-gray-200 bg-gray-50">
         <div className="flex items-center space-x-6 text-sm">
           <div className="flex items-center space-x-2">

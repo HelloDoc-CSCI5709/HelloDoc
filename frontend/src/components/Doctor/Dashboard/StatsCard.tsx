@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrendingUp, TrendingDown, Users, Calendar, Clock, CheckCircle } from 'lucide-react';
+import { TrendingUp, TrendingDown, Users, Clock, CheckCircle } from 'lucide-react';
 
 interface StatsCardProps {
   stats: {

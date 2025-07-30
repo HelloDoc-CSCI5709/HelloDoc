@@ -1,4 +1,4 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import {
   getDashboardStats,
   getTodayAppointments,
@@ -11,18 +11,39 @@ import {
   getVideoRoomToken
 } from '../actions/dashboardActions';
 
+interface Appointment {
+  id: string;
+  time?: string;
+  start?: string;
+  status?: string;
+  doctorName?: string;
+  patientName?: string;
+  [key: string]: string | number | boolean | undefined;
+}
+
+interface PatientProfile {
+  id: string;
+  fullName?: string;
+  email?: string;
+  phone?: string;
+  age?: number;
+  address?: string;
+  [key: string]: string | number | boolean | undefined;
+}
+interface DashboardStats {
+  totalVisits: number;
+  newPatients: number;
+  oldPatients: number;
+  todayAppointments: number;
+  pendingAppointments: number;
+  completedAppointments: number;
+}
+
 interface DashboardState {
-  stats: {
-    totalVisits: number;
-    newPatients: number;
-    oldPatients: number;
-    todayAppointments: number;
-    pendingAppointments: number;
-    completedAppointments: number;
-  } | null;
-  todayAppointments: any[];
-  upcomingAppointments: any[];
-  selectedPatient: any | null;
+  stats: DashboardStats | null;
+  todayAppointments: Appointment[];
+  upcomingAppointments: Appointment[];
+  selectedPatient: PatientProfile | null;
   loading: boolean;
   error: string | null;
 }
@@ -49,12 +70,11 @@ const dashboardSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Dashboard Stats
       .addCase(getDashboardStats.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(getDashboardStats.fulfilled, (state, action) => {
+      .addCase(getDashboardStats.fulfilled, (state, action: PayloadAction<DashboardStats>) => {
         state.loading = false;
         state.stats = action.payload;
       })
@@ -63,11 +83,10 @@ const dashboardSlice = createSlice({
         state.error = action.payload as string;
       })
 
-      // Today's Appointments
       .addCase(getTodayAppointments.pending, (state) => {
         state.loading = true;
       })
-      .addCase(getTodayAppointments.fulfilled, (state, action) => {
+      .addCase(getTodayAppointments.fulfilled, (state, action: PayloadAction<Appointment[]>) => {
         state.loading = false;
         state.todayAppointments = action.payload;
       })
@@ -76,11 +95,10 @@ const dashboardSlice = createSlice({
         state.error = action.payload as string;
       })
 
-      // Upcoming Appointments
       .addCase(getUpcomingAppointments.pending, (state) => {
         state.loading = true;
       })
-      .addCase(getUpcomingAppointments.fulfilled, (state, action) => {
+      .addCase(getUpcomingAppointments.fulfilled, (state, action: PayloadAction<Appointment[]>) => {
         state.loading = false;
         state.upcomingAppointments = action.payload;
       })
@@ -89,11 +107,10 @@ const dashboardSlice = createSlice({
         state.error = action.payload as string;
       })
 
-      // Patient Profile (renamed from getDoctorPatients)
       .addCase(getPatientProfile.pending, (state) => {
         state.loading = true;
       })
-      .addCase(getPatientProfile.fulfilled, (state, action) => {
+      .addCase(getPatientProfile.fulfilled, (state, action: PayloadAction<PatientProfile>) => {
         state.loading = false;
         state.selectedPatient = action.payload;
       })
@@ -102,11 +119,10 @@ const dashboardSlice = createSlice({
         state.error = action.payload as string;
       })
 
-      // Get Appointment By ID
       .addCase(getAppointmentById.pending, (state) => {
         state.loading = true;
       })
-      .addCase(getAppointmentById.fulfilled, (state, action) => {
+      .addCase(getAppointmentById.fulfilled, (state) => {
         state.loading = false;
       })
       .addCase(getAppointmentById.rejected, (state, action) => {
@@ -114,19 +130,17 @@ const dashboardSlice = createSlice({
         state.error = action.payload as string;
       })
 
-      // Cancel Appointment
       .addCase(cancelAppointment.pending, (state) => {
         state.loading = true;
       })
-      .addCase(cancelAppointment.fulfilled, (state, action) => {
+      .addCase(cancelAppointment.fulfilled, (state, action: PayloadAction<Appointment>) => {
         state.loading = false;
-        // Update appointments in state
-        const cancelledAppointment = action.payload;
+        const cancelled = action.payload;
         state.todayAppointments = state.todayAppointments.map(apt =>
-          apt.id === cancelledAppointment.id ? cancelledAppointment : apt
+          apt.id === cancelled.id ? cancelled : apt
         );
         state.upcomingAppointments = state.upcomingAppointments.map(apt =>
-          apt.id === cancelledAppointment.id ? cancelledAppointment : apt
+          apt.id === cancelled.id ? cancelled : apt
         );
       })
       .addCase(cancelAppointment.rejected, (state, action) => {
@@ -134,18 +148,17 @@ const dashboardSlice = createSlice({
         state.error = action.payload as string;
       })
 
-      // Reschedule Appointment
       .addCase(rescheduleAppointment.pending, (state) => {
         state.loading = true;
       })
-      .addCase(rescheduleAppointment.fulfilled, (state, action) => {
+      .addCase(rescheduleAppointment.fulfilled, (state, action: PayloadAction<Appointment>) => {
         state.loading = false;
-        const rescheduledAppointment = action.payload;
+        const updated = action.payload;
         state.todayAppointments = state.todayAppointments.map(apt =>
-          apt.id === rescheduledAppointment.id ? rescheduledAppointment : apt
+          apt.id === updated.id ? updated : apt
         );
         state.upcomingAppointments = state.upcomingAppointments.map(apt =>
-          apt.id === rescheduledAppointment.id ? rescheduledAppointment : apt
+          apt.id === updated.id ? updated : apt
         );
       })
       .addCase(rescheduleAppointment.rejected, (state, action) => {
@@ -153,26 +166,22 @@ const dashboardSlice = createSlice({
         state.error = action.payload as string;
       })
 
-      // Create Video Room
       .addCase(createVideoRoom.pending, (state) => {
         state.loading = true;
       })
-      .addCase(createVideoRoom.fulfilled, (state, action) => {
+      .addCase(createVideoRoom.fulfilled, (state) => {
         state.loading = false;
-        // Handle video room creation success
       })
       .addCase(createVideoRoom.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
 
-      // Get Video Room Token
       .addCase(getVideoRoomToken.pending, (state) => {
         state.loading = true;
       })
-      .addCase(getVideoRoomToken.fulfilled, (state, action) => {
+      .addCase(getVideoRoomToken.fulfilled, (state) => {
         state.loading = false;
-        // Handle video token retrieval success
       })
       .addCase(getVideoRoomToken.rejected, (state, action) => {
         state.loading = false;

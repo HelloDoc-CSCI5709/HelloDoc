@@ -29,7 +29,6 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ doctorId }) => {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Load existing profile data
   useEffect(() => {
     if (doctorId) {
       dispatch(getDoctorProfile(doctorId));
@@ -38,7 +37,6 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ doctorId }) => {
     }
   }, [dispatch, doctorId]);
 
-  // Populate form when profile data is loaded
   useEffect(() => {
     if (profile) {
       setFormData({
@@ -54,7 +52,6 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ doctorId }) => {
     }
   }, [profile]);
 
-  // Handle success/error states
   useEffect(() => {
     if (success && !loading && isSubmitting) {
       toast.success('Profile updated successfully!');
@@ -100,8 +97,7 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ doctorId }) => {
       ...prev,
       [name]: value
     }));
-    
-    // Clear error when user starts typing
+
     if (formErrors[name]) {
       setFormErrors(prev => ({
         ...prev,
@@ -115,7 +111,7 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ doctorId }) => {
       ...prev,
       specialization: values
     }));
-    
+
     if (formErrors.specialization) {
       setFormErrors(prev => ({
         ...prev,
@@ -126,14 +122,14 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ doctorId }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       toast.error('Please fix the form errors before submitting');
       return;
     }
 
     setIsSubmitting(true);
-    
+
     try {
       await dispatch(updateBasicDoctorProfile(formData)).unwrap();
     } catch (err) {
@@ -174,14 +170,12 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ doctorId }) => {
         <p className="text-gray-600">Update your professional profile information</p>
       </div>
 
-      {/* Profile Picture Section */}
       <div className="mb-8 pb-6 border-b border-gray-200">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">Profile Picture</h3>
         <ProfileImageUpload
           currentImage={profile?.doctor?.profilePicture?.path}
-          onUploadSuccess={(imageUrl) => {
+          onUploadSuccess={() => {
             toast.success('Profile picture updated successfully!');
-            // Refresh profile to get updated image
             dispatch(getDoctorProfile(null));
           }}
           disabled={loading || isSubmitting}

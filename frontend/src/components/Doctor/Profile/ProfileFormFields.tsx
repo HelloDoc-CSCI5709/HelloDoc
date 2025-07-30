@@ -1,5 +1,4 @@
 import React from 'react';
-import { ALLOWED_SPECIALIZATIONS } from './types';
 
 interface InputFieldProps {
   label: string;
@@ -125,7 +124,6 @@ interface MultiSelectFieldProps {
 
 export const MultiSelectField: React.FC<MultiSelectFieldProps> = ({
   label,
-  name,
   value,
   onChange,
   options,
