@@ -44,9 +44,10 @@ const AllAppointments: React.FC = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to fetch appointments");
       setAppointments(data.body);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to fetch appointments");
-    } finally {
+    } catch (err) {
+  const errorMsg = err instanceof Error ? err.message : "Unknown error";
+  toast.error(errorMsg || "Error message");
+} finally {
       setLoading(false);
     }
   };
@@ -69,9 +70,10 @@ const AllAppointments: React.FC = () => {
       if (!res.ok) throw new Error(data.message);
       toast.success("Appointment cancelled successfully");
       fetchAppointments();
-    } catch (err: any) {
-      toast.error(err.message || "Error cancelling appointment");
-    } finally {
+    } catch (err) {
+  const errorMsg = err instanceof Error ? err.message : "Unknown error";
+  toast.error(errorMsg || "Error message");
+}finally {
       setCancellingId(null);
     }
   };
@@ -107,9 +109,10 @@ const AllAppointments: React.FC = () => {
       toast.success("Appointment rescheduled successfully");
       setShowRescheduleModal(false);
       fetchAppointments();
-    } catch (err: any) {
-      toast.error(err.message || "Error rescheduling appointment");
-    }
+    } catch (err) {
+  const errorMsg = err instanceof Error ? err.message : "Unknown error";
+  toast.error(errorMsg || "Error message");
+}
   };
 
   const getStatusColor = (status: string) => {
