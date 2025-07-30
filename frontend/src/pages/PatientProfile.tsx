@@ -5,9 +5,19 @@ import PatientInfoSection from '../components/Patient/PatientInfoSection';
 import PatientDocumentUpload from '../components/Patient/PatientDocumentUpload';
 import axios from 'axios';
 import { BASE_URL } from '../constant_url';
+interface Patient {
+  fullName: string;
+  gender: string;
+  dob: string;
+  mobile: string;
+  emergencyContact: string;
+  email: string;
+  image: string;
+}
+
 
 const PatientProfile: React.FC = () => {
-  const [patientData, setPatientData] = useState<any>(null);
+  const [patientData, setPatientData] = useState<Patient | null>(null);
   const [patientDocuments, setPatientDocuments] = useState<{ [key: string]: string }>({});
   const token = localStorage.getItem('accessToken');
 

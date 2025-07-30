@@ -1,11 +1,20 @@
 import React, { useState, type JSX } from 'react';
-
-interface PatientDocumentUploadProps {
-  patient: any;
-  documents: { [key: string]: string }; // backend documents map
+interface Patient {
+  fullName: string;
+  gender: string;
+  dob: string;
+  mobile: string;
+  emergencyContact: string;
+  email: string;
+  image: string;
 }
 
-const PatientDocumentUpload: React.FC<PatientDocumentUploadProps> = ({ patient, documents }) => {
+interface PatientDocumentUploadProps {
+  patient: Patient | null;
+  documents: { [key: string]: string }; 
+}
+
+const PatientDocumentUpload: React.FC<PatientDocumentUploadProps> = ({  documents }) => {
   const [files, setFiles] = useState({
     insuranceCard: null as File | null,
     healthFront: null as File | null,
