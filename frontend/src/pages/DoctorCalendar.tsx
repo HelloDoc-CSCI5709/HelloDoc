@@ -110,6 +110,9 @@ const DoctorCalendar: React.FC = () => {
               initialView="timeGridWeek"
               events={events}
               eventClick={handleEventClick}
+
+
+              
               dateClick={handleDateClick}
               headerToolbar={{
                 left: "prev,next today",
