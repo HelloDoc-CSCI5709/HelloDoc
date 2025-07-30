@@ -21,33 +21,49 @@ const DoctorSelection: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchDoctors = async () => {
-      try {
-        const res = await axios.get(`${import.meta.env.VITE_BACKEND_BASE_URL}/api/doctors/list/all`);
-        const fetched: RawDoctor[] = res.data?.body?.doctors || [];
+  const fetchDoctors = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('accessToken');
 
-        const mappedDoctors: Doctor[] = fetched.map((doc) => ({
-          doctorId: doc.doctorId?._id || '',
-          name: doc.doctorId?.fullName || 'Doctor',
-          specialty: doc.specialization?.[0] || 'General',
-          clinic: doc.address || 'Clinic address unavailable',
-          experience: doc.education || 'Experience info unavailable',
-          rating: '4.5',
-          reviews: 123,  
-          nextAvailable: 'Available now',
-          image: `https://ui-avatars.com/api/?name=${encodeURIComponent(doc.doctorId?.fullName || 'Doctor')}`
-        }));
+      const res = await axios.get<{
+        body: { doctors: RawDoctor[] };
+      }>(
+        `${import.meta.env.VITE_BACKEND_BASE_URL}/api/doctors/list/all`,
+        {
+          headers: {
+            // if there's no token, this will send an empty string
+            Authorization: token ? `Bearer ${token}` : '',
+          },
+        }
+      );
 
-        setDoctors(mappedDoctors);
-      } catch (err) {
-        console.error('Failed to fetch doctors:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+      const fetched: RawDoctor[] = res.data?.body?.doctors || [];
 
-    fetchDoctors();
-  }, []);
+      const mappedDoctors: Doctor[] = fetched.map((doc) => ({
+        doctorId:     doc.doctorId?._id                || '',
+        name:         doc.doctorId?.fullName           || 'Doctor',
+        specialty:    doc.specialization?.[0]          || 'General',
+        clinic:       doc.address                      || 'Clinic address unavailable',
+        experience:   doc.education                    || 'Experience info unavailable',
+        rating:       '4.5',
+        reviews:      123,
+        nextAvailable:'Available now',
+        image:        `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                         doc.doctorId?.fullName || 'Doctor'
+                       )}`,
+      }));
+
+      setDoctors(mappedDoctors);
+    } catch (err) {
+      console.error('Failed to fetch doctors:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchDoctors();
+}, []);
 
   const handleSchedule = (doctor: Doctor) => {
     localStorage.setItem("selectedDoctor", JSON.stringify(doctor));

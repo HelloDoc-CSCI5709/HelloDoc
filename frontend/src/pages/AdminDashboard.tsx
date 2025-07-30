@@ -46,14 +46,14 @@ const AdminDashboard: React.FC = () => {
     approveSuccess,
     rejectSuccess
   } = useAppSelector(state => state.admin);
-  const [currentUser, setCurrentUser] = useState<{ fullName?: string; email?: string; role?: string } | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ fullName?: string; email?: string; role?: string; userId?: string } | null>(null);
   const [activeTab, setActiveTab] = useState<'users' | 'appointments' | 'credentials'>('users');
   const [rejectionReason, setRejectionReason] = useState('');
   const [selectedCredential, setSelectedCredential] = useState<Credential | null>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedVideoLogs, setSelectedVideoLogs] = useState<VideoLog[] | null>(null);
 
-  // Decode JWT on mount
+  // Decode JWT on mount and extract adminId
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
     if (token) {
@@ -105,9 +105,13 @@ const AdminDashboard: React.FC = () => {
   }, [videoLogs]);
 
   // Handlers
-  const handleApprove = (credentialId: string, doctorId: string) => {
+  const handleApprove = (_id: string, doctorId: string) => {
     if (window.confirm('Approve this doctor credential?')) {
-      dispatch(approveDoctorCredential(doctorId, credentialId));
+      if (!currentUser?.userId) {
+        dispatch({ type: 'ADMIN_APPROVE_DOCTOR_FAILURE', payload: 'Admin ID not found in token' });
+        return;
+      }
+      dispatch(approveDoctorCredential(doctorId, _id, currentUser.userId));
     }
   };
 
@@ -118,11 +122,16 @@ const AdminDashboard: React.FC = () => {
 
   const confirmReject = () => {
     if (selectedCredential && rejectionReason.trim()) {
+      if (!currentUser?.userId) {
+        dispatch({ type: 'ADMIN_REJECT_DOCTOR_FAILURE', payload: 'Admin ID not found in token' });
+        return;
+      }
       dispatch(
         rejectDoctorCredential(
           selectedCredential.doctorId,
           selectedCredential._id,
-          rejectionReason.trim()
+          rejectionReason.trim(),
+          currentUser.userId
         )
       );
       setSelectedCredential(null);
@@ -431,15 +440,27 @@ const AdminDashboard: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap space-x-2">
+                        {cred.filePath && (
+                          <a
+                            href={cred.filePath}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-indigo-600 hover:underline text-sm"
+                          >
+                            View PDF
+                          </a>
+                        )}
                         <button
                           onClick={() => handleApprove(cred._id, cred.doctorId)}
                           className="text-green-600 hover:underline text-sm"
+                          disabled={cred.status !== 'Pending'}
                         >
                           Approve
                         </button>
                         <button
                           onClick={() => handleReject(cred)}
                           className="text-red-600 hover:underline text-sm"
+                          disabled={cred.status !== 'Pending'}
                         >
                           Reject
                         </button>

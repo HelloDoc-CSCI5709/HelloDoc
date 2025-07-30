@@ -27,6 +27,12 @@ import {
 } from "../types/adminTypes";
 import { BASE_URL } from "../../constant_url";
 
+interface ApiResponse<T> {
+  status: number;
+  message: string;
+  body: T;
+}
+
 export interface AddressComponents {
   city?: string;
   state?: string;
@@ -78,13 +84,14 @@ export interface PatientProfile {
 
 export interface User {
   _id: string;
+  sub?: string; // Added to store JWT 'sub' field for adminId
   fullName: string;
   email: string;
   role: 'patient' | 'doctor' | 'admin';
   emailVerified?: boolean;
   createdAt?: string;
   profile?: DoctorProfile | PatientProfile | null;
-  credentialStatus?: Credential | null; // Only for doctors
+  credentialStatus?: Credential | null;
 }
 
 export interface Credential {
@@ -93,6 +100,7 @@ export interface Credential {
   doctorId: string;
   doctorName?: string;
   fileName?: string;
+  filePath?: string;
   submittedAt?: string;
   reviewedAt?: string;
   reason?: string;
@@ -240,19 +248,24 @@ export const deleteAppointment = (appointmentId: string): AppThunk => async (dis
 
 export const approveDoctorCredential = (
   doctorId: string, 
-  credentialId: string
+  _id: string,
+  adminId: string
 ): AppThunk => async (dispatch) => {
   try {
+    if (!adminId) {
+      throw new Error("Admin ID is required");
+    }
     dispatch({ type: ADMIN_APPROVE_DOCTOR_REQUEST });
     const api = axiosWithAuth();
 
-    const response = await api.put<{ credential: Credential }>(
-      `/api/doctors/${doctorId}/credentials/${credentialId}/approve`
+    const response = await api.put<ApiResponse<Credential>>(
+      `/api/doctors/${doctorId}/credentials/${_id}/approve`,
+      { adminId }
     );
 
     dispatch({
       type: ADMIN_APPROVE_DOCTOR_SUCCESS,
-      payload: response.data.credential,
+      payload: response.data.body,
     });
   } catch (error) {
     const errorMessage = handleApiError(error, "Failed to approve credential");
@@ -262,21 +275,25 @@ export const approveDoctorCredential = (
 
 export const rejectDoctorCredential = (
   doctorId: string, 
-  credentialId: string, 
-  reason: string
+  _id: string, 
+  reason: string,
+  adminId: string
 ): AppThunk => async (dispatch) => {
   try {
+    if (!adminId) {
+      throw new Error("Admin ID is required");
+    }
     dispatch({ type: ADMIN_REJECT_DOCTOR_REQUEST });
     const api = axiosWithAuth();
 
-    const response = await api.put<{ credential: Credential }>(
-      `/api/doctors/${doctorId}/credentials/${credentialId}/reject`,
-      { reason }
+    const response = await api.put<ApiResponse<Credential>>(
+      `/api/doctors/${doctorId}/credentials/${_id}/reject`,
+      { reason, adminId }
     );
 
     dispatch({
       type: ADMIN_REJECT_DOCTOR_SUCCESS,
-      payload: response.data.credential,
+      payload: response.data.body,
     });
   } catch (error) {
     const errorMessage = handleApiError(error, "Failed to reject credential");
@@ -289,13 +306,13 @@ export const fetchPendingCredentials = (): AppThunk => async (dispatch) => {
     dispatch({ type: ADMIN_FETCH_CREDENTIALS_REQUEST });
     const api = axiosWithAuth();
 
-    const response = await api.get<{ credentials: Credential[] }>(
-      "/api/doctors/credentials/pending"
+    const response = await api.get<ApiResponse<Credential[]>>(
+      "/api/doctors/credentials"
     );
 
     dispatch({
       type: ADMIN_FETCH_CREDENTIALS_SUCCESS,
-      payload: response.data.credentials,
+      payload: response.data.body,
     });
   } catch (error) {
     const errorMessage = handleApiError(error, "Failed to fetch pending credentials");

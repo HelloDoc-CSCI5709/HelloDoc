@@ -18,7 +18,8 @@ const {
   rejectDoctorCredential,
   getDoctorCredentialById,
   getDoctorPatients,
-  getAllDoctors
+  getAllDoctors,
+  getAllDoctorCredentials
 } = require('../controllers/doctorController');
 const { 
   uploadCredential, 
@@ -52,7 +53,7 @@ router.post(
 router.put('/profile/address', authorizeRoles('doctor', 'admin'), updateDoctorAddress);
 router.post('/profile-picture', authorizeRoles('doctor'), uploadProfilePictureMiddleware.single('image'), uploadProfilePicture);
 router.get('/patients', authorizeRoles('doctor'), getDoctorPatients);
-
+router.get('/credentials', authorizeRoles('admin'),getAllDoctorCredentials);
 router.post(
   '/:doctorId/credentials',
   authorizeRoles('doctor'),

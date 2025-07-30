@@ -298,7 +298,6 @@ const geocodeAddress = async (address) => {
       
       const addressComponents = {};
       result.address_components.forEach(component => {
-        const types = component.types;
         if (types.includes('street_number')) {
           addressComponents.streetNumber = component.long_name;
         }
@@ -953,8 +952,11 @@ const listDoctors = handleAsync(async (req, res) => {
     country
   } = req.query;
 
-  const errors = [];
+  // Validate pagination parameters first
+  const { errors: paginationErrors, pageNum, limitNum } = validatePagination(page, limit);
+  const errors = [...paginationErrors];
 
+  // Validate other query parameters
   if (specialization && !ALLOWED_SPECIALIZATIONS.includes(specialization)) {
     errors.push('specialization is invalid');
   }
@@ -963,7 +965,7 @@ const listDoctors = handleAsync(async (req, res) => {
     errors.push('Both lng and lat must be provided together');
   }
   
-  let longitude, latitude;
+  let longitude, latitude, radiusNum;
   if (lng && lat) {
     longitude = parseFloat(lng);
     latitude = parseFloat(lat);
@@ -976,17 +978,14 @@ const listDoctors = handleAsync(async (req, res) => {
       errors.push('lat must be a number between -90 and 90');
     }
     
-    const radiusNum = parseInt(radius);
+    radiusNum = parseInt(radius);
     if (isNaN(radiusNum) || radiusNum <= 0 || radiusNum > PAGINATION_LIMITS.MAX_RADIUS) {
       errors.push(`radius must be a positive number up to ${PAGINATION_LIMITS.MAX_RADIUS} meters`);
     }
-    
-    const { errors: paginationErrors, pageNum, limitNum } = validatePagination(page, limit);
-    errors.push(...paginationErrors);
-    
-    if (errors.length > 0) {
-      return res.status(400).json(responseBody(400, 'Validation error', errors));
-    }
+  }
+  
+  if (errors.length > 0) {
+    return res.status(400).json(responseBody(400, 'Validation error', errors));
   }
   
   try {
@@ -1263,10 +1262,34 @@ const getDoctorCredentials = handleAsync(async (req, res) => {
   }));
 });
 
+const getAllDoctorCredentials = handleAsync(async (req, res) => {
+  const { user } = req;
+
+  // admin‑only
+  const authCheck = checkAdminAuth(user);
+  if (!authCheck.authorized) {
+    return res
+      .status(403)
+      .json(responseBody(403, authCheck.message, null));
+  }
+
+  // fetch ALL credentials
+  const credentials = await DoctorCredential.find({});
+  if (!credentials.length) {
+    return res
+      .status(404)
+      .json(responseBody(404, 'No credentials found', null));
+  }
+
+  return res
+    .status(200)
+    .json(responseBody(200, 'Credentials retrieved', credentials));
+});
+
 const processCredentialReview = async (req, res, isApproval) => {
   const { doctorId, credentialId } = req.params;
   const { user } = req;
-  
+  console.log("CHECKING DoctorId", credentialId)
   if (!isValidObjectId(doctorId) || !isValidObjectId(credentialId)) {
     return res.status(400).json(responseBody(400, 'Invalid doctorId or credentialId', null));
   }
@@ -1379,5 +1402,6 @@ module.exports = {
   approveDoctorCredential,
   rejectDoctorCredential,
   getDoctorCredentialById,
-  getDoctorPatients
+  getDoctorPatients,
+  getAllDoctorCredentials
 };
