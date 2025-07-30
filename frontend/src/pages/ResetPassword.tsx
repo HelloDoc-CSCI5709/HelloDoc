@@ -50,6 +50,7 @@ const ResetPassword: React.FC = () => {
         email: data.email,
         otp,
         newPassword: data.newPassword,
+        confirmPassword: data.confirmPassword
       }),
     });
 

@@ -9,7 +9,6 @@ import type {
   ResetPasswordPayload
 } from '../types/authTypes';
 
-// Existing Auth Actions
 export const loginUser = createAsyncThunk(
   'auth/login',
   async ({ email, password }: LoginCredentials, { rejectWithValue }) => {
@@ -84,7 +83,6 @@ export const refreshTokens = createAsyncThunk(
   }
 );
 
-// Forgot Password Actions
 export const forgotPassword = createAsyncThunk(
   'auth/forgotPassword',
   async ({ email }: ForgotPasswordPayload, { rejectWithValue }) => {

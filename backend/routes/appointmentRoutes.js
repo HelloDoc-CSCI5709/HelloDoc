@@ -8,13 +8,15 @@ const {
   cancelAppointment,
   rescheduleAppointment,
   noShowAppointment,
-  deleteAppointment
+  deleteAppointment,
+  getAllAppointments
 } = require('../controllers/appointmentController');
 
 const router = Router();
 
 router.use(verifyToken);
 
+router.get('/all', authorizeRoles('admin'), getAllAppointments)
 router.post(
     '/book',
     authorizeRoles('patient'),
@@ -43,5 +45,7 @@ router.delete(
     '/:appointmentId',
     authorizeRoles('admin'),
     deleteAppointment);
+
+
 
 module.exports = router;

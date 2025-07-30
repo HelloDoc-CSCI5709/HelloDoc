@@ -10,8 +10,8 @@ const initialState: UserState = {
   verificationStatus: null,
   role: undefined,
   profile: undefined,
-  doctorsError: undefined,
-  selectedDoctor: undefined,
+  doctorsError: false,
+  selectedDoctor: false,
   doctorsLoading: false,
   doctors: []
 };
@@ -20,6 +20,21 @@ const userSlice = createSlice({
   name: 'user',
   initialState,
   reducers: {
+    setUser(state, action: PayloadAction<User>) {
+      state.currentUser = action.payload;
+      state.userId = action.payload.id;
+      state.role = action.payload.role;
+      state.verificationStatus = action.payload.isVerified ? 'verified' : 'unverified';
+      state.error = null;
+    },
+    clearUser(state) {
+      state.currentUser = null;
+      state.userId = undefined;
+      state.role = undefined;
+      state.verificationStatus = null;
+      state.profile = undefined;
+      state.error = null;
+    },
     loginSuccess(state, action: PayloadAction<User>) {
       state.currentUser = action.payload;
       state.userId = action.payload.id;
@@ -93,6 +108,8 @@ const userSlice = createSlice({
 });
 
 export const { 
+  setUser,
+  clearUser,
   loginSuccess, 
   registerSuccess, 
   clearUserError,

@@ -1,12 +1,13 @@
 const { responseBody } = require('../config/responseBody');
 const Appointment = require('../models/Appointments');
+const DoctorAvailability = require('../models/DoctorAvailability');
 
 const bookAppointment = async (req, res) => {
   try {
-    const { doctorId, scheduledFor , reason} = req.body;
+    const { doctorId, scheduledFor, reason } = req.body;
     const user = req.user;
 
-    if( !user || user.role !== 'patient') {
+    if (!user || user.role !== 'patient') {
       return res.status(403).json(
         responseBody(403, 'Forbidden: Only patients can book appointments', null)
       );
@@ -14,68 +15,85 @@ const bookAppointment = async (req, res) => {
 
     if (!doctorId || !scheduledFor) {
       return res.status(400).json(
-        responseBody(400, 'Validation error: patientId, doctorId, and scheduledFor are required', null)
+        responseBody(400, 'Validation error: doctorId and scheduledFor are required', null)
       );
     }
 
     const startTime = new Date(scheduledFor);
+    const now = new Date();
+    if (startTime < now) {
+      return res.status(400).json(
+        responseBody(400, 'Validation error: scheduled time must be in the future', null)
+      );
+    }
+
     const endTime = new Date(startTime.getTime() + 30 * 60 * 1000);
+
+    const availability = await DoctorAvailability.findOne({
+      doctorId,
+      start: { $lte: startTime },
+      end:   { $gte: endTime }
+    });
+
+    if (!availability) {
+      return res.status(400).json(
+        responseBody(400, 'Doctor is not available at the requested time', null)
+      );
+    }
 
     const conflictingAppointment = await Appointment.findOne({
       doctorId,
       status: { $ne: 'cancelled' },
-      scheduledFor: {
-        $lt: endTime
-      },
+      scheduledFor: { $lt: endTime },
       $expr: {
         $gt: [
-            {$add: ["$scheduledFor", 30 * 60 * 1000]},
-            startTime
+          { $add: ['$scheduledFor', 30 * 60 * 1000] },
+          startTime
         ]
       }
     });
-    
     if (conflictingAppointment) {
       return res.status(409).json(
         responseBody(409, 'Conflict error: Doctor is already booked for this time slot', null)
       );
     }
 
-    const appointment = new Appointment ({
-        patientId: user.userId,
-        doctorId,
-        scheduledFor: startTime,
-        reason
-    })
+    const appointment = new Appointment({
+      patientId: user.userId,
+      doctorId,
+      scheduledFor: startTime,
+      reason
+    });
     await appointment.save();
 
     return res.status(201).json(
-        responseBody(201, 'Appointment booked successfully', {
-            appointmentId: appointment._id,
-            patientId: appointment.patientId,
-            doctorId: appointment.doctorId,
-            scheduledFor: appointment.scheduledFor,
-            date: appointment.date,
-            time: appointment.time,
-            reason: appointment.reason,
-            status: appointment.status
-        })
+      responseBody(201, 'Appointment booked successfully', {
+        appointmentId:   appointment._id,
+        patientId:       appointment.patientId,
+        doctorId:        appointment.doctorId,
+        scheduledFor:    appointment.scheduledFor,
+        date:            appointment.date,
+        time:            appointment.time,
+        reason:          appointment.reason,
+        status:          appointment.status
+      })
     );
   } catch (error) {
     console.error('Error booking appointment:', error);
-    if( error.name === 'ValidationError') {
-        const errorMessage = Object.values(error.errors)
-            .map(err => err.message)
-            .join(', ');
-        return res.status(400).json(
-            responseBody(400, `Validation error: ${errorMessage}`, null)
-        );
+    if (error.name === 'ValidationError') {
+      const errorMessage = Object.values(error.errors)
+        .map(err => err.message)
+        .join(', ');
+      return res.status(400).json(
+        responseBody(400, `Validation error: ${errorMessage}`, null)
+      );
     }
     return res.status(500).json(
-        responseBody(500, 'Internal Server Error: Unable to book appointment', null)
+      responseBody(500, 'Internal Server Error: Unable to book appointment', null)
     );
   }
-}
+};
+
 
 const getAppointments = async (req, res) => {
   try {
@@ -87,11 +105,16 @@ const getAppointments = async (req, res) => {
       );
     }
 
-    const query = user.role === 'patient' ? { patientId: user.userId } : { doctorId: user.userId };
+    const now = new Date();
+    const baseFilter = { scheduledFor: { $gte: now } };
 
-    const appointments = await Appointment.find(query)
+    const filter = user.role === 'patient'
+      ? { ...baseFilter, patientId: user.userId }
+      : { ...baseFilter, doctorId:  user.userId  };
+
+    const appointments = await Appointment.find(filter)
       .populate('patientId', 'fullName email')
-      .populate('doctorId', 'fullName email');
+      .populate('doctorId',  'fullName email');
 
     return res.status(200).json(
       responseBody(200, 'Appointments retrieved successfully', appointments)
@@ -150,7 +173,7 @@ const getAppointmentById = async (req, res) => {
     console.error('Error retrieving appointment:', error);
     if (error.name === 'CastError') {
       return res.status(400).json(
-        responseBody(400, 'Validation error: Invalid appointmentId format', null)
+        responseBody(400, 'Validation error: Invalid appointmentId yolo format', null)
       );
     }
     return res.status(500).json(
@@ -248,7 +271,26 @@ const rescheduleAppointment = async (req, res) => {
     }
 
     const startTime = new Date(scheduledFor);
+
+    const now = new Date();
+    if (startTime < now) {
+      return res.status(400).json(
+        responseBody(400, 'Validation error: scheduled time must be in the future', null)
+      );
+    }
+
     const endTime = new Date(startTime.getTime() + 30 * 60 * 1000);
+
+    const availability = await DoctorAvailability.findOne({
+      doctorId,
+      start: { $lte: startTime },
+      end:   { $gte: endTime }
+    });
+    if (!availability) {
+      return res.status(400).json(
+        responseBody(400, 'Doctor is not available at the requested time', null)
+      );
+    }
 
     const conflictingAppointment = await Appointment.findOne({
       doctorId: appointment.doctorId,
@@ -428,6 +470,37 @@ const deleteAppointment = async (req, res) => {
   }
 };
 
+const getAllAppointments = async (req, res) => {
+  try {
+    const { user } = req;
+
+    if (!user || !user.userId) {
+      return res.status(403).json(
+        responseBody(403, 'Unauthorized: User not authenticated', null)
+      );
+    }
+
+    if (user.role !== 'admin') {
+      return res.status(403).json(
+        responseBody(403, 'Forbidden: Only admins can retrieve all appointments', null)
+      );
+    }
+
+    const appointments = await Appointment.find({})
+      .populate('patientId', 'fullName email')
+      .populate('doctorId', 'fullName email');
+
+    return res.status(200).json(
+      responseBody(200, 'All appointments retrieved successfully', appointments)
+    );
+  } catch (error) {
+    console.error('Error retrieving all appointments:', error);
+    return res.status(500).json(
+      responseBody(500, 'Internal Server Error: Unable to retrieve appointments', null)
+    );
+  }
+};
+
 module.exports = {
   bookAppointment,
   getAppointments,
@@ -435,6 +508,7 @@ module.exports = {
   cancelAppointment,
   rescheduleAppointment,
   noShowAppointment,
-  deleteAppointment
+  deleteAppointment,
+  getAllAppointments
 };
 

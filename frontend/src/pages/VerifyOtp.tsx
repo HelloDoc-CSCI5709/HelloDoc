@@ -35,7 +35,7 @@ const VerifyOtpPage: React.FC = () => {
   }
 
   const verifyOtpApi = async (data: VerifyOtpRequest): Promise<void> => {
-    const response = await fetch(`${BASE_URL}/api/auth/verify-otp`, {
+    const response = await fetch(`${BASE_URL}/api/auth/verify-reset-otp`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

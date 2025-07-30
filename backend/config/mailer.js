@@ -1,4 +1,3 @@
-// services/mailer.js
 const nodemailer = require('nodemailer');
 const { SMTP } = require('../config/Constants');
 

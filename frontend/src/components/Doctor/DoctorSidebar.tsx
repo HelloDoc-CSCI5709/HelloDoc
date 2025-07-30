@@ -14,7 +14,7 @@ const navItems = [
   { label: 'Calendar', icon: <Calendar />, to: '/doctor-calendar' },
   { label: 'Chat', icon: <MessageCircle />, to: '/chat' },
   { label: 'Health Record', icon: <FileText />, to: '/health-record' },
-  { label: 'Profile', icon: <Settings />, to: '/doctor-profile' },
+  { label: 'Profile', icon: <Settings />, to: '/doctor/doctor-profile' },
 ];
 
 const DoctorSidebar: React.FC = () => {

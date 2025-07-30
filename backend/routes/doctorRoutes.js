@@ -17,7 +17,9 @@ const {
   approveDoctorCredential,
   rejectDoctorCredential,
   getDoctorCredentialById,
-  getDoctorPatients
+  getDoctorPatients,
+  getAllDoctors,
+  getAllDoctorCredentials
 } = require('../controllers/doctorController');
 const { 
   uploadCredential, 
@@ -28,7 +30,8 @@ const {
 const router = Router();
 
 router.get('/public/:doctorId', getPublicDoctorProfile);
-router.get('/list/all', listDoctors);
+router.get('/list/all',verifyToken, listDoctors);
+router.get('/all', verifyToken,authorizeRoles('admin'), getAllDoctors)
 router.get('/geocode', geocodeLocation);
 
 router.use(verifyToken);
@@ -50,7 +53,7 @@ router.post(
 router.put('/profile/address', authorizeRoles('doctor', 'admin'), updateDoctorAddress);
 router.post('/profile-picture', authorizeRoles('doctor'), uploadProfilePictureMiddleware.single('image'), uploadProfilePicture);
 router.get('/patients', authorizeRoles('doctor'), getDoctorPatients);
-
+router.get('/credentials', authorizeRoles('admin'),getAllDoctorCredentials);
 router.post(
   '/:doctorId/credentials',
   authorizeRoles('doctor'),

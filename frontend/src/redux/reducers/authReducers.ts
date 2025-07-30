@@ -71,7 +71,6 @@ const authSlice = createSlice({
 export const { logout, clearAuthError } = authSlice.actions;
 export default authSlice.reducer;
 
-// Forgot Password Reducer
 export const forgotPasswordInitialState: ForgotPasswordState = {
   loading: false,
   error: null,

@@ -20,7 +20,6 @@ const getPatientProfile = async (req, res) => {
 
     const healthRecord = await HAndPRecord.findOne({ patientId: userId }).populate('doctorNotes.doctorId', 'fullName email');
 
-    // 🔽 Get PatientDocument files (insurance card, health card, etc.)
     const patientDocs = await PatientDocument.find({ userId });
     const patientDocumentLinks = {};
     patientDocs.forEach(doc => {
@@ -29,7 +28,6 @@ const getPatientProfile = async (req, res) => {
       }
     });
 
-    // 🔽 Get HealthRecord files (e.g. x-rays, prescriptions)
     const healthDocs = await HealthRecord.find({ patientId: userId });
     const healthRecordLinks = {};
     healthDocs.forEach(doc => {
@@ -162,8 +160,42 @@ const updatePatientProfile = async (req, res) => {
   }
 };
 
+const getAllPatients = async (req, res) => {
+  try {
+    const user = req.user
+
+    if (!user || user.role !== 'admin') {
+      return res.status(403).json(responseBody(403, 'Unauthorized: Admin access required', null));
+    }
+
+    const patients = await User.find({ role: 'patient' })
+      .select('fullName email emailVerified createdAt')
+      .lean();
+
+    const patientData = await Promise.all(patients.map(async (patient) => {
+      const profile = await PatientProfile.findOne({ userId: patient._id })
+        .select('mobile dob gender emergencyContact')
+        .lean();
+      
+      return {
+        ...patient,
+        profile: profile || null
+      };
+    }));
+
+    return res.status(200).json(
+      responseBody(200, 'Patients retrieved successfully', patientData)
+    );
+  } catch (err) {
+    console.error('Get All Patients error:', err);
+    return res.status(500).json(responseBody(500, 'Internal Server error', null));
+  }
+};
+
 module.exports = {
   getPatientProfile,
+  updatePatientProfile,
   getPatientProfileForDoctor,
+  getAllPatients,
   updatePatientProfile
 };

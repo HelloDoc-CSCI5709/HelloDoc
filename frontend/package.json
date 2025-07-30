@@ -24,6 +24,7 @@
     "axios": "^1.11.0",
     "date-fns": "^4.1.0",
     "eslint-plugin-react-refresh": "^0.4.20",
+    "jwt-decode": "^4.0.0",
     "lint": "^1.1.2",
     "lucide-react": "^0.522.0",
     "react": "^18.2.0",
